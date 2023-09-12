@@ -1,15 +1,61 @@
 body {
-    background-color: #9c7ea0;
+    background-image: url("tile.webp");
+    background-repeat: repeat;
+    display: grid;
+    grid-template-rows: var(--header-height) auto;
+    grid-template-columns: var(--sidebar-width) auto;
 }
 
-/* Nav Bar styling */
+a {
+    color: white;
+}
+
+table, th, td {
+    border: 3px solid white;
+    border-style: inset;
+}
+
+table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+td {
+    width: 33%;
+}
+
+h2 {
+    color: white;
+}
+/* Side bar layout thing */
+
+/*
+#header {
+    text-align: center;
+    font-size: large;
+    color: white;
+}
+
+#sidebar {
+    text-align: left;
+    font-size: medium;
+    color: white;
+}
+
+#content {
+    text-align: center;
+    font-size: small;
+}
+
+/*
+    Nav Bar styling
 ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
     overflow: hidden;
     text-align: center;
-    background-color: blueviolet;
+    background-color: #a478b8;
     position: fixed;
     top: 0;
     width: 100%;
@@ -21,17 +67,17 @@ li {
 
 li a {
     display: block;
-    color: white;
+    color: lavender;
     text-align: center;
     padding: 14px 16px;
     text-decoration: none;
   }
   
-  /* Change the link color to #111 (black) on hover */
   li a:hover {
-    background-color: violet;
+    background-color: #e0c2f2;
   }
   
   .active {
-    background-color: violet;
+    background-color: #e0c2f2;
   }
+*/

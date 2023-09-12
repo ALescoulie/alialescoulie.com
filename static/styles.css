@@ -4,6 +4,7 @@ body {
     display: grid;
     grid-template-rows: var(--header-height) auto;
     grid-template-columns: var(--sidebar-width) auto;
+    font-family: "Times New Roman" serif;
 }
 
 a {
@@ -18,14 +19,30 @@ table, th, td {
 table {
     table-layout: fixed;
     width: 100%;
+    max-width: 900px;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.fill { /* filling the table tiles */
+    width: 100%;
+    max-width: 300px;
+    max-height: 300px;
 }
 
 td {
     width: 33%;
 }
 
+h1 {
+    color: white;
+    font-family: "Times New Roman";
+}
+
 h2 {
     color: white;
+    font-family: "Times New Roman";
 }
 /* Side bar layout thing */
 

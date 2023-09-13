@@ -7,8 +7,14 @@ body {
     font-family: "Times New Roman" serif;
 }
 
-a {
+.header {
+    text-align: center;
+}
+
+.header h1 {
+    font-size: xx-large;
     color: white;
+    font-family: "Times New Roman";
 }
 
 table, th, td {
@@ -37,64 +43,64 @@ td {
 
 h1 {
     color: white;
-    font-family: "Times New Roman";
-}
-
-h2 {
-    color: white;
-    font-family: "Times New Roman";
-}
-/* Side bar layout thing */
-
-/*
-#header {
-    text-align: center;
     font-size: large;
-    color: white;
+    font-family: "Times New Roman";
 }
 
-#sidebar {
+h2 { /*For table cell text*/
+    color: white;
+    font-family: "Times New Roman";
+}
+
+.sidenav { /* side nav bar */
+    height: 100%;
+    width: 160px;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    overflow-x: hidden;
+    padding-top: 20px;
+    background-color: black;
     text-align: left;
+    padding-left: 10px;
+}
+
+.sidenav a {
     font-size: medium;
     color: white;
+    font-family: "Times New Roman";
 }
 
-#content {
-    text-align: center;
-    font-size: small;
+.main {
+    margin-left: 160px;
+    padding: 0px 10px;
 }
 
-/*
-    Nav Bar styling
-ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    text-align: center;
-    background-color: #a478b8;
-    position: fixed;
-    top: 0;
-    width: 100%;
+.left_img_container {
+    /* Image with text to left for about page */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-li {
-    display: inline-block;
+img {
+    max-width: 100%;
 }
 
-li a {
-    display: block;
-    color: lavender;
-    text-align: center;
-    padding: 14px 16px;
-    text-decoration: none;
-  }
-  
-  li a:hover {
-    background-color: #e0c2f2;
-  }
-  
-  .active {
-    background-color: #e0c2f2;
-  }
-*/
+.left_img {
+    /* Image for left_img_container */
+    flex-basis: 40%;
+}
+
+.left_img_text {
+    /* Text for left_img_container */
+    font-size: large;
+    padding-left: 20px;
+    align-self: first baseline;
+}
+
+.left_img_container p {
+    font-family: "Times New Roman";
+    color: white;
+}

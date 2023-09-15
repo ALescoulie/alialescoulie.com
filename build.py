@@ -14,10 +14,7 @@ import datetime
 
 from jinja2 import Environment, Template, FileSystemLoader, select_autoescape
 
-import argparse
-
 import pandoc
-
 
 # Pre-defined site names
 BUILD_DIR: Final[Path] = Path("site")
@@ -46,6 +43,7 @@ def load_templates(template_dir: Path = TEMPLATE_DIR) -> Environment:
 
 HeaderTemp: Template = load_templates().get_template("header.html.jinja")
 NavbarTemp: Template = load_templates().get_template("navbar.html.jinja")
+
 
 def build_pages() -> None:
     make_build_dir() # Ensures that build_dir exists
@@ -82,6 +80,7 @@ def build_pages() -> None:
 def copy_static() -> None:
     make_build_dir()
     shutil.copytree(STATIC_DIR, Path(BUILD_DIR, "static"))
+
 
 class PostData(NamedTuple):
     path: Path
@@ -198,22 +197,21 @@ def copy_post_files(post: PostBuildData) -> None:
 
 
 def build_blog(post_build_dir: Path = POST_BUILD_DIR,
+               header: Template = HeaderTemp,
+               navbar: Template = NavbarTemp,
+               template_name: str = "post_temp.html.jinja"
                ) -> None:
     posts: List[PostData] = collect_posts()
     posts: List[PostHTML] = [build_post_html(post) for post in posts]
     posts: List[PostBuildData] = [build_post_page(post,
                                                   post_build_dir=post_build_dir,
-                                                  
+                                                  header=header,
+                                                  navbar=navbar,
+                                                  template_name=template_name
                                                   )
-                                  ]
-
+                                   for post in posts]
+    for post in posts:
+        copy_post_files(post)
 
 def clean():
     shutil.rmtree(BUILD_DIR)
-
-def build_core() -> None:
-    build_pages()
-    copy_static()
-
-if __name__ == "__main__":
-

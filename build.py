@@ -156,6 +156,7 @@ class PostBuildData(NamedTuple):
     directory: Path
     data: PostData 
 
+
 def build_post_page(
         Post: PostHTML,
         post_build_dir: Path = POST_BUILD_DIR,
@@ -212,6 +213,7 @@ def build_blog(post_build_dir: Path = POST_BUILD_DIR,
                                    for post in posts]
     for post in posts:
         copy_post_files(post)
+
 
 def clean():
     shutil.rmtree(BUILD_DIR)

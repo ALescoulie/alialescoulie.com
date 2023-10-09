@@ -1,1 +1,4 @@
 site/*
+test/site/*
+.vscode/*
+__pycache__/*

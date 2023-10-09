@@ -1,3 +1,15 @@
-{
-    
+{ 
+    "file_path": "post3.ipynb",
+    "post_dir": "post1",
+    "format": "jupyter notebook",
+    "static_dir": "static",
+    "title": "Post1",
+    "authors": ["Alia Lescoulie"],
+    "day": 1,
+    "month": 1,
+    "year": 2023,
+    "description": "A test jupyter notebook",
+    "thumbnail": "foobar.png",
+    "project": "foobar",
+    "tags": ["foo", "bar"]
 }

@@ -1,4 +1,9 @@
-site/*
-test/site/*
+site_out/*
+tests/site/*
 .vscode/*
 __pycache__/*
+
+
+# Added by cargo
+
+/target

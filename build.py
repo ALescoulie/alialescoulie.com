@@ -143,8 +143,8 @@ def build_post_html(post_data: PostData,
         print(f"Building {post_data.path} html")
     with open(post_dir.joinpath(post_data.directory, post_data.path), 'r') as post_file:
         post_text: str = post_file.read()
-        post_html: Any = pandoc.read(post_text, format=post_data.format)
-    
+        post_info: Any = pandoc.read(post_text, format=post_data.format)
+        post_html: str = pandoc.write(post_info, format='html')
     return PostHTML(post_data, post_html)
 
 
@@ -170,8 +170,8 @@ class PostBuildData(NamedTuple):
 def build_post_page(
         Post: PostHTML,
         post_build_dir: Path = POST_BUILD_DIR,
-        Header: Template = HeaderTemp,
-        Navbar: Template = NavbarTemp,
+        header: Template = HeaderTemp,
+        navbar: Template = NavbarTemp,
         template_name: str = "post_temp.html.jinja",
         verbose: bool = False
         ) -> PostBuildData:
@@ -183,38 +183,44 @@ def build_post_page(
 
     PostTemp: Template = TemplatesBase.get_template(template_name)
 
-    header_text: str = Header.render(title=f"{Post.post_data.title} - Alia Lescoulie")
+    header_text: str = header.render(title=f"{Post.post_data.title} - Alia Lescoulie")
 
     post_text: str = PostTemp.render(
         header=header_text,
-        navbar=Navbar.render(),
+        navbar=navbar.render(),
         post_title=Post.post_data.title,
         post_author=render_authors_string(Post.post_data.authors),
-        post_date=render_date_string(Post.date),
+        post_date=render_date_string(Post.post_data.date),
         post_html=Post.post_src
         )
 
     post_dir: Path = post_build_dir.joinpath(Post.post_data.directory)
-    post_path: Path = post_dir.joinpath(Post.post_data.path.stem(), ".html")    
+    post_path: Path = post_dir.joinpath(Post.post_data.path.stem + ".html")    
 
     if verbose:
         print(f"writing post to {post_path}")
 
-    with open(post_path) as post_file:
+    post_dir.mkdir(parents=True, exist_ok=True)
+
+    with open(post_path, "w") as post_file:
         post_file.write(post_text)
 
-    return PostBuildData(post_path, Post.post_data, Post.post_data)
+    return PostBuildData(post_path, post_dir, Post.post_data)
 
 
 def copy_post_files(post: PostBuildData, verbose: bool = False) -> None:
-    if PostBuildData.data.static is None:
+    if post.data.static is None:
         return None
     else:
+        new_static_dir: Path = post.directory.joinpath("static")
+
         if verbose:
             print(f"Copying {post.data.static} to {new_static_dir}")
-        new_static_dir: Path = post.data.static, post.directory.joinpath("static")
-        os.mkdir(new_static_dir)
-        shutil.copytree(post.data.static, new_static_dir)
+
+        if not new_static_dir.exists():
+            os.mkdir(new_static_dir)
+
+        shutil.copytree(post.data.static, new_static_dir, dirs_exist_ok=True)
 
 
 def build_blog(post_src_dir: Path = POSTS_DIR,

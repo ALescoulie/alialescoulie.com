@@ -3,13 +3,15 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-pandoc.url = "github:nixos/nixpkgs/nixos-22.05";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, nixpkgs-pandoc, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        pandoc = nixpkgs-pandoc.legacyPackages.${system}.pandoc;
 
         customOverrides = final: prev: {
           pandoc = prev.pandoc.overrideAttrs (oldAttrs: {
@@ -32,7 +34,7 @@
         packages.default = self.packages.${system}.${packageName};
 
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [ poetry ];
+          buildInputs = [ pkgs.poetry pandoc pkgs.rustc pkgs.cargo pkgs.rustup];
           inputsFrom = builtins.attrValues self.packages.${system};
         };
       });

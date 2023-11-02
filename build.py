@@ -27,6 +27,14 @@ POST_BUILD_DIR: Final[Path] = BUILD_DIR.joinpath(Path("posts"))
 
 
 def make_build_dir(build_dir: Path = BUILD_DIR) -> None:
+    r"""Makes the sites build directory if it does not already exist.
+
+    Arguments
+    ---------
+
+    build_dir: The directory name to be created
+
+    """
     if build_dir.exists() and build_dir.is_dir():
         return
     elif build_dir.exists() and not build_dir.is_dir():
@@ -34,26 +42,33 @@ def make_build_dir(build_dir: Path = BUILD_DIR) -> None:
     os.mkdir(build_dir) 
 
 
-def load_templates(template_dir: Path = TEMPLATE_DIR) -> Environment:
+def load_templates(templates_dir: Path = TEMPLATE_DIR) -> Environment:
+    r"""Loads the Jinja templates from the specified directory into an
+    Environment. The returned object can generate jinja templates by
+    calling `get_template("template_path.html.jinja")`
+
+    By default gets templates from the `templates` directory.
+    """
     TemplatesBase: Environment = Environment(
-        loader=FileSystemLoader(template_dir),
+        loader=FileSystemLoader(templates_dir),
         autoescape=select_autoescape()
     )
     return TemplatesBase
 
-HeaderTemp: Template = load_templates().get_template("header.html.jinja")
-NavbarTemp: Template = load_templates().get_template("navbar.html.jinja")
 
+def build_pages(build_dir: Path = BUILD_DIR,
+                templates_dir: Path = TEMPLATE_DIR,
+                src_dir: Path = SRC_DIR) -> None:
+    r"""Builds the jinja templates in the source dir into html files in the
+    build dir using the header and navbar jinja templates in the provided
+    templates dir.
+    """
+    make_build_dir(build_dir=build_dir) # Ensures that build_dir exists
 
-def build_pages() -> None:
-    make_build_dir() # Ensures that build_dir exists
-    TemplatesBase: Environment = Environment(
-        loader=FileSystemLoader("templates"),
-        autoescape=select_autoescape()
-    )
+    TemplatesBase: Environment = load_templates(templates_dir=templates_dir)
 
     Pages: Environment = Environment(
-        loader=FileSystemLoader("src"),
+        loader=FileSystemLoader(src_dir),
     )
 
 
@@ -61,7 +76,7 @@ def build_pages() -> None:
     navbar: Template = TemplatesBase.get_template("navbar.html.jinja")
 
 
-    for page in glob.glob("src/*.html.jinja"):
+    for page in glob.glob(f"{src_dir}/*.html.jinja"):
         page_path: Path = Path(page)
 
         page_temp: Template = Pages.get_template(page_path.stem + page_path.suffix)
@@ -73,13 +88,14 @@ def build_pages() -> None:
 
         page_text: str = page_temp.render(header=page_header, navbar=navbar.render())
 
-        with open(BUILD_DIR.joinpath(page_path.stem), 'w', encoding='utf-8') as file:
+        with open(build_dir.joinpath(page_path.stem), 'w', encoding='utf-8') as file:
             file.write(page_text) 
     
 
-def copy_static() -> None:
-    make_build_dir()
-    shutil.copytree(STATIC_DIR, Path(BUILD_DIR, "static"))
+def copy_static(static_dir: Path = STATIC_DIR,
+                build_dir: Path = BUILD_DIR) -> None:
+    make_build_dir(build_dir=build_dir)
+    shutil.copytree(static_dir, Path(build_dir, "static"))
 
 
 class PostData(NamedTuple):
@@ -96,15 +112,15 @@ class PostData(NamedTuple):
     tags: List[str]
 
 
-def parse_post(post_json: Path) -> PostData:
-    with open(post_json, 'r') as file:
+def parse_post(post_json_path: Path, posts_dir: Path) -> PostData:
+    with open(post_json_path, 'r') as file:
         post_json: Dict[str, Any] = json.load(file)
 
         Post: PostData = PostData(
             Path(post_json["file_path"]),
-            Path(post_json["post_dir"]),
+            Path.joinpath(posts_dir, Path(post_json["post_dir"])),
             post_json["format"],
-            Path(post_json["static_dir"]),
+            Path(post_json["static_dir"]) if post_json["static_dir"] is not None else None,
             post_json["title"],
             post_json["authors"],
             datetime.date(
@@ -128,7 +144,11 @@ def collect_posts(posts_src_dir: Path = POSTS_DIR,
         print(f"Collecting Posts in {posts_src_dir}")
         for post in post_list:
             print(post)
-    return [parse_post(Path.joinpath(posts_src_dir, Path(json_path))) for json_path in post_list]
+    return [
+        parse_post(
+            Path.joinpath(posts_src_dir, Path(json_path)),
+            posts_src_dir) for json_path in post_list
+            ]
 
 
 class PostHTML(NamedTuple):
@@ -137,11 +157,10 @@ class PostHTML(NamedTuple):
 
 
 def build_post_html(post_data: PostData,
-                    post_dir: Path,
                     verbose: bool = False) -> PostHTML:
     if verbose:
         print(f"Building {post_data.path} html")
-    with open(post_dir.joinpath(post_data.directory, post_data.path), 'r') as post_file:
+    with open(Path.joinpath(post_data.directory, post_data.path), 'r') as post_file:
         post_text: str = post_file.read()
         post_info: Any = pandoc.read(post_text, format=post_data.format)
         post_html: str = pandoc.write(post_info, format='html')
@@ -170,18 +189,20 @@ class PostBuildData(NamedTuple):
 def build_post_page(
         Post: PostHTML,
         post_build_dir: Path = POST_BUILD_DIR,
-        header: Template = HeaderTemp,
-        navbar: Template = NavbarTemp,
-        template_name: str = "post_temp.html.jinja",
+        templates_dir: Path = TEMPLATE_DIR, 
+        post_template_name: str = "post_temp.html.jinja",
         verbose: bool = False
         ) -> PostBuildData:
     
-    TemplatesBase: Environment = load_templates()
+    TemplatesBase: Environment = load_templates(templates_dir=templates_dir)
+
+    header: Template = TemplatesBase.get_template("header.html.jinja")
+    navbar: Template = TemplatesBase.get_template("navbar.html.jinja")
 
     if verbose:
-        print(f"Loading template {template_name}")
+        print(f"Loading template {post_template_name}")
 
-    PostTemp: Template = TemplatesBase.get_template(template_name)
+    PostTemp: Template = TemplatesBase.get_template(post_template_name)
 
     header_text: str = header.render(title=f"{Post.post_data.title} - Alia Lescoulie")
 
@@ -194,7 +215,7 @@ def build_post_page(
         post_html=Post.post_src
         )
 
-    post_dir: Path = post_build_dir.joinpath(Post.post_data.directory)
+    post_dir: Path = post_build_dir.joinpath(os.path.split(str(Post.post_data.directory))[-1])
     post_path: Path = post_dir.joinpath(Post.post_data.path.stem + ".html")    
 
     if verbose:
@@ -220,14 +241,17 @@ def copy_post_files(post: PostBuildData, verbose: bool = False) -> None:
         if not new_static_dir.exists():
             os.mkdir(new_static_dir)
 
-        shutil.copytree(post.data.static, new_static_dir, dirs_exist_ok=True)
+        shutil.copytree(
+            Path.joinpath(post.data.directory, post.data.static),
+            new_static_dir, 
+            dirs_exist_ok=True
+        )
 
 
 def build_blog(post_src_dir: Path = POSTS_DIR,
                post_build_dir: Path = POST_BUILD_DIR,
-               header: Template = HeaderTemp,
-               navbar: Template = NavbarTemp,
-               template_name: str = "post_temp.html.jinja",
+               templates_dir: Path = TEMPLATE_DIR,
+               post_template_name: str = "post_temp.html.jinja",
                verbose: bool = False
                ) -> None:
     if verbose:
@@ -242,14 +266,12 @@ def build_blog(post_src_dir: Path = POSTS_DIR,
     
     posts: List[PostHTML] = [build_post_html(
         post,
-        post_src_dir,
         verbose=verbose) for post in posts]
 
     posts: List[PostBuildData] = [build_post_page(post,
                                                   post_build_dir=post_build_dir,
-                                                  header=header,
-                                                  navbar=navbar,
-                                                  template_name=template_name,
+                                                  templates_dir=templates_dir,
+                                                  post_template_name=post_template_name,
                                                   verbose=verbose
                                                   )
                                    for post in posts]

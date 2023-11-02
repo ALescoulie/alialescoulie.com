@@ -2,7 +2,7 @@
     "file_path": "post2.tex",
     "post_dir": "post2",
     "format": "latex",
-    "static_dir": "static",
+    "static_dir": null,
     "title": "Post1",
     "authors": ["Alia Lescoulie"],
     "day": 1,

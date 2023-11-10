@@ -248,12 +248,52 @@ def copy_post_files(post: PostBuildData, verbose: bool = False) -> None:
         )
 
 
+def build_blog_page(posts: List[PostBuildData],
+                    templates_dir: Path = TEMPLATE_DIR,
+                    build_dir: Path = BUILD_DIR,
+                    verbose: bool = False) -> None:
+    TemplatesBase: Environment = load_templates(templates_dir)
+
+    header: Template = TemplatesBase.get_template("header.html.jinja")
+    navbar: Template = TemplatesBase.get_template("navbar.html.jinja")
+    block: Template = TemplatesBase.get_template("post_block.html.jinja")
+
+    blog_page: Template = TemplatesBase.get_template("blog.html.jinja")
+
+    date_sort = lambda x : x.data.date
+
+    reverse_cron_posts: List[PostBuildData] = posts.sort(key=date_sort, reverse=True)
+
+    post_blocks: List[str] = [
+        block.render(
+            title=post.data.title,
+            link=Path.joinpath(post.directory, post.path),
+            date=post.data.date,
+            author=post.data.authors,
+            summary="foo",
+            tags=post.data.tags
+        ) for post in reverse_cron_posts
+    ]
+
+    blog_page_text: str = blog_page.render(
+        header=header,
+        navbar=navbar,
+        posts="\n".join(post_blocks)
+    )
+    
+    with open(build_dir.joinpath("blog.html"), 'w') as blog_file:
+        blog_file.write(blog_page_text)
+
+
 def build_blog(post_src_dir: Path = POSTS_DIR,
                post_build_dir: Path = POST_BUILD_DIR,
+               site_build_dir: Path = BUILD_DIR,
                templates_dir: Path = TEMPLATE_DIR,
                post_template_name: str = "post_temp.html.jinja",
                verbose: bool = False
                ) -> None:
+    r"""Builds the blog over several steps
+    """
     if verbose:
         print("Starting blog construction")
 
@@ -277,6 +317,8 @@ def build_blog(post_src_dir: Path = POSTS_DIR,
                                    for post in posts]
     for post in posts:
         copy_post_files(post, verbose=verbose)
+    
+    build_blog_page(posts, templates_dir, site_build_dir, verbose=verbose)
 
 
 def clean():

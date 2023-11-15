@@ -18,11 +18,11 @@ import pandoc
 
 # Pre-defined site names
 BUILD_DIR: Final[Path] = Path("site")
-SRC_DIR: Final[Path] = Path("src")
-STATIC_DIR: Final[Path] = Path("static")
+SRC_DIR: Final[Path] = Path("site_src")
+STATIC_DIR: Final[Path] = Path("site_src/static")
 POSTS_DIR: Final[Path] = Path("posts")
 PROJS_DIR: Final[Path] = Path("projects")
-TEMPLATE_DIR: Final[Path] = Path("templates")
+TEMPLATE_DIR: Final[Path] = Path("sitegen/templates")
 POST_BUILD_DIR: Final[Path] = BUILD_DIR.joinpath(Path("posts"))
 
 
@@ -42,13 +42,16 @@ def make_build_dir(build_dir: Path = BUILD_DIR) -> None:
     os.mkdir(build_dir) 
 
 
-def load_templates(templates_dir: Path = TEMPLATE_DIR) -> Environment:
+def load_templates(templates_dir: Path = TEMPLATE_DIR,
+                   verbose: bool = False) -> Environment:
     r"""Loads the Jinja templates from the specified directory into an
     Environment. The returned object can generate jinja templates by
     calling `get_template("template_path.html.jinja")`
 
     By default gets templates from the `templates` directory.
     """
+    if verbose:
+        print(f"Loading templates from {templates_dir}")
     TemplatesBase: Environment = Environment(
         loader=FileSystemLoader(templates_dir),
         autoescape=select_autoescape()
@@ -118,7 +121,7 @@ def parse_post(post_json_path: Path, posts_dir: Path) -> PostData:
 
         Post: PostData = PostData(
             Path(post_json["file_path"]),
-            Path.joinpath(posts_dir, Path(post_json["post_dir"])),
+            Path(post_json["post_dir"]),
             post_json["format"],
             Path(post_json["static_dir"]) if post_json["static_dir"] is not None else None,
             post_json["title"],
@@ -157,10 +160,15 @@ class PostHTML(NamedTuple):
 
 
 def build_post_html(post_data: PostData,
+                    post_src_dir: Path = POSTS_DIR,
                     verbose: bool = False) -> PostHTML:
     if verbose:
         print(f"Building {post_data.path} html")
-    with open(Path.joinpath(post_data.directory, post_data.path), 'r') as post_file:
+
+    post_src_path: Path = post_src_dir.joinpath(post_data.directory,
+                                                post_data.path
+                                                )
+    with open(post_src_path, 'r') as post_file:
         post_text: str = post_file.read()
         post_info: Any = pandoc.read(post_text, format=post_data.format)
         post_html: str = pandoc.write(post_info, format='html')
@@ -188,13 +196,17 @@ class PostBuildData(NamedTuple):
 
 def build_post_page(
         Post: PostHTML,
+        site_build_dir: Path = BUILD_DIR,
         post_build_dir: Path = POST_BUILD_DIR,
         templates_dir: Path = TEMPLATE_DIR, 
         post_template_name: str = "post_temp.html.jinja",
         verbose: bool = False
         ) -> PostBuildData:
     
-    TemplatesBase: Environment = load_templates(templates_dir=templates_dir)
+    TemplatesBase: Environment = load_templates(
+            templates_dir,
+            verbose
+        )
 
     header: Template = TemplatesBase.get_template("header.html.jinja")
     navbar: Template = TemplatesBase.get_template("navbar.html.jinja")
@@ -215,7 +227,7 @@ def build_post_page(
         post_html=Post.post_src
         )
 
-    post_dir: Path = post_build_dir.joinpath(os.path.split(str(Post.post_data.directory))[-1])
+    post_dir: Path = site_build_dir.joinpath(post_build_dir, Post.post_data.directory)
     post_path: Path = post_dir.joinpath(Post.post_data.path.stem + ".html")    
 
     if verbose:
@@ -229,11 +241,17 @@ def build_post_page(
     return PostBuildData(post_path, post_dir, Post.post_data)
 
 
-def copy_post_files(post: PostBuildData, verbose: bool = False) -> None:
+def copy_post_files(post: PostBuildData,
+                    site_build_dir: Path = BUILD_DIR,
+                    post_src_dir: Path = POSTS_DIR,
+                    post_build_dir: Path = POST_BUILD_DIR,
+                    verbose: bool = False) -> None:
     if post.data.static is None:
         return None
     else:
-        new_static_dir: Path = post.directory.joinpath("static")
+        new_static_dir: Path = site_build_dir.joinpath(post_build_dir,
+                                                       post.data.directory,
+                                                       "static") 
 
         if verbose:
             print(f"Copying {post.data.static} to {new_static_dir}")
@@ -242,7 +260,7 @@ def copy_post_files(post: PostBuildData, verbose: bool = False) -> None:
             os.mkdir(new_static_dir)
 
         shutil.copytree(
-            Path.joinpath(post.data.directory, post.data.static),
+            post_src_dir.joinpath(post.data.directory, post.data.static),
             new_static_dir, 
             dirs_exist_ok=True
         )
@@ -250,9 +268,14 @@ def copy_post_files(post: PostBuildData, verbose: bool = False) -> None:
 
 def build_blog_page(posts: List[PostBuildData],
                     templates_dir: Path = TEMPLATE_DIR,
-                    build_dir: Path = BUILD_DIR,
+                    site_build_dir: Path = BUILD_DIR,
+                    post_build_dir: Path = POST_BUILD_DIR,
                     verbose: bool = False) -> None:
-    TemplatesBase: Environment = load_templates(templates_dir)
+
+    if verbose:
+        print(f"Building blog page")
+
+    TemplatesBase: Environment = load_templates(templates_dir, verbose)
 
     header: Template = TemplatesBase.get_template("header.html.jinja")
     navbar: Template = TemplatesBase.get_template("navbar.html.jinja")
@@ -262,26 +285,36 @@ def build_blog_page(posts: List[PostBuildData],
 
     date_sort = lambda x : x.data.date
 
-    reverse_cron_posts: List[PostBuildData] = posts.sort(key=date_sort, reverse=True)
+    reverse_cron_posts: List[PostBuildData] = sorted(posts, key=date_sort, reverse=True)
+    
+    if verbose:
+        print("Posts sorted")
 
-    post_blocks: List[str] = [
-        block.render(
-            title=post.data.title,
-            link=Path.joinpath(post.directory, post.path),
-            date=post.data.date,
-            author=post.data.authors,
-            summary=post.data.description + "read more ...",
-            tags=post.data.tags
-        ) for post in reverse_cron_posts
-    ]
+    post_blocks: List[str] = []
+
+    for post in reverse_cron_posts:
+        if verbose:
+            print(f"Building block for {post.data.title}")
+        post_blocks.append(
+            block.render(
+                title=post.data.title,
+                link=post_build_dir.joinpath(post.data.directory, post.data.path.stem + ".html"),
+                date=render_date_string(post.data.date),
+                author=render_authors_string(post.data.authors),
+                summary=post.data.description + " read more ...",
+                tags=post.data.tags
+            )
+        )
 
     blog_page_text: str = blog_page.render(
-        header=header,
-        navbar=navbar,
+        header=header.render(),
+        navbar=navbar.render(),
         posts="\n".join(post_blocks)
     )
     
-    with open(build_dir.joinpath("blog.html"), 'w') as blog_file:
+    with open(site_build_dir.joinpath("blog.html"), 'w') as blog_file:
+        if verbose:
+            print(f"Writing blog page to {site_build_dir.joinpath('blog.html')}")
         blog_file.write(blog_page_text)
 
 
@@ -306,9 +339,11 @@ def build_blog(post_src_dir: Path = POSTS_DIR,
     
     posts: List[PostHTML] = [build_post_html(
         post,
+        post_src_dir = post_src_dir,
         verbose=verbose) for post in posts]
 
     posts: List[PostBuildData] = [build_post_page(post,
+                                                  site_build_dir=site_build_dir,
                                                   post_build_dir=post_build_dir,
                                                   templates_dir=templates_dir,
                                                   post_template_name=post_template_name,
@@ -316,9 +351,15 @@ def build_blog(post_src_dir: Path = POSTS_DIR,
                                                   )
                                    for post in posts]
     for post in posts:
-        copy_post_files(post, verbose=verbose)
+        copy_post_files(
+            post,
+            site_build_dir=site_build_dir,
+            post_src_dir=post_src_dir,
+            post_build_dir=post_build_dir,
+            verbose=verbose
+        )
     
-    build_blog_page(posts, templates_dir, site_build_dir, verbose=verbose)
+    build_blog_page(posts, templates_dir, site_build_dir, post_build_dir, verbose=verbose)
 
 
 def clean(build_dir: Path = BUILD_DIR):

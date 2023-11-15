@@ -216,11 +216,11 @@ def build_post_page(
 
     PostTemp: Template = TemplatesBase.get_template(post_template_name)
 
-    header_text: str = header.render(title=f"{Post.post_data.title} - Alia Lescoulie")
+    header_text: str = header.render(title=f"{Post.post_data.title} - Alia Lescoulie", depth="../../")
 
     post_text: str = PostTemp.render(
         header=header_text,
-        navbar=navbar.render(),
+        navbar=navbar.render(depth="../../"),
         post_title=Post.post_data.title,
         post_author=render_authors_string(Post.post_data.authors),
         post_date=render_date_string(Post.post_data.date),
@@ -307,7 +307,7 @@ def build_blog_page(posts: List[PostBuildData],
         )
 
     blog_page_text: str = blog_page.render(
-        header=header.render(),
+        header=header.render(title="Blog"),
         navbar=navbar.render(),
         posts="\n".join(post_blocks)
     )

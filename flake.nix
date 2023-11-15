@@ -2,40 +2,24 @@
   description = "My personal website";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-pandoc.url = "github:nixos/nixpkgs/nixos-22.05";
+    naersk.url = "github:nix-community/naersk/master";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.05";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-pandoc, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-        pandoc = nixpkgs-pandoc.legacyPackages.${system}.pandoc;
-
-        customOverrides = final: prev: {
-          pandoc = prev.pandoc.overrideAttrs (oldAttrs: {
-            buildInputs = [ prev.setuptools ];
-            runtimeInputs = [ prev.setuptools ];
-          });
+  outputs = inputs@{ self, naersk, nixpkgs, flake-utils, ... }:
+  flake-utils.lib.eachSystem [ 
+    "x86_64-linux"
+    "aarch64-linux"
+    "aarch64-darwin"
+  ] (system: let
+        pkgs = import nixpkgs { inherit system; };
+        naersk-lib = pkgs.callPackage naersk { };
+      in
+      {
+        defaultPackage = naersk-lib.buildPackage ./.;
+        devShell = with pkgs; mkShell {
+          buildInputs = [ cargo rustc rustfmt pre-commit rustPackages.clippy pandoc ];
+          RUST_SRC_PATH = rustPlatform.rustLibSrc;
         };
-
-        app = pkgs.poetry2nix.mkPoetryApplication {
-          projectDir = ./.;
-          overrides =
-            [ pkgs.poetry2nix.defaultPoetryOverrides customOverrides ];
-        };
-
-        # DON'T FORGET TO PUT YOUR PACKAGE NAME HERE, REMOVING `throw`
-        packageName = "alialescoulie.com";
-      in {
-        packages.${packageName} = app;
-
-        packages.default = self.packages.${system}.${packageName};
-
-        devShells.default = pkgs.mkShell {
-          buildInputs = [ pkgs.poetry pandoc pkgs.rustc pkgs.cargo pkgs.rustup];
-          inputsFrom = builtins.attrValues self.packages.${system};
-        };
-      });
-}
+      });}

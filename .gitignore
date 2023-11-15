@@ -1,7 +1,8 @@
 site_out/*
 tests/site/*
 .vscode/*
-__pycache__/*
+**/__pycache__/*
+*.pyc
 
 
 # Added by cargo
@@ -15,3 +16,6 @@ __pycache__/*
 *.log
 *.pdf
 *.gz
+
+# Poetry outputs
+dist

@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "alialescoulie-com"
+name = "sitegen"
 version = "0.1.0"
 description = "My personal website"
 authors = ["Alia Lescoulie <alia.lescoulie@gmail.com>"]
 readme = "README.md"
-packages = [{include = "alialescoulie"}]
+packages = [{include = "sitegen"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -13,7 +13,10 @@ pandoc = "^2.3"
 click = "^8.1.7"
 setuptools = "^68.2.2" # needed for pandoc
 
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+sitegen = "sitegen.main:main"
+

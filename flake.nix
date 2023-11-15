@@ -3,10 +3,11 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-pandoc.url = "github:nixos/nixpkgs/nixos-23.05";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, nixpkgs-pandoc, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
@@ -17,6 +18,8 @@
             runtimeInputs = [ prev.setuptools ];
           });
         };
+
+        pandoc = nixpkgs-pandoc.legacyPackages.${system}.pandoc;
 
         app = pkgs.poetry2nix.mkPoetryApplication {
           projectDir = ./.;
@@ -32,7 +35,7 @@
         packages.default = self.packages.${system}.${packageName};
 
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [ poetry pandoc ];
+          buildInputs = [ pkgs.poetry pandoc ];
           inputsFrom = builtins.attrValues self.packages.${system};
         };
       });

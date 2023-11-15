@@ -32,7 +32,7 @@
         packages.default = self.packages.${system}.${packageName};
 
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [ poetry ];
+          buildInputs = with pkgs; [ poetry pandoc ];
           inputsFrom = builtins.attrValues self.packages.${system};
         };
       });

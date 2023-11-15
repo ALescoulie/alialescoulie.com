@@ -7,3 +7,11 @@ __pycache__/*
 # Added by cargo
 
 /target
+
+# LaTeX generated files
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.pdf
+*.gz

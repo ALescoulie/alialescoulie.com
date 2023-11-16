@@ -9,7 +9,7 @@
     "month": 1,
     "year": 2023,
     "description": "A test jupyter notebook",
-    "thumbnail": "foobar.png",
+    "thumbnail": "static/cicero.jpg",
     "project": "foobar",
     "tags": ["foo", "bar"]
 }

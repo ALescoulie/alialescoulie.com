@@ -3,13 +3,13 @@
     "post_dir": "post3",
     "format": "latex",
     "static_dir": "static",
-    "title": "Post1",
+    "title": "Post3",
     "authors": ["Alia Lescoulie"],
     "day": 1,
     "month": 1,
-    "year": 2023,
+    "year": 2022,
     "description": "A test latex doc",
-    "thumbnail": "foobar.png",
+    "thumbnail": "static/cicero.png",
     "project": "foobar",
     "tags": ["foo", "bar"]
 }

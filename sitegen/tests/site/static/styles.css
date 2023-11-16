@@ -112,4 +112,25 @@ img {
     background-color: white;
 }
 
+.blog_post_item {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    max-height: 200px;
+    margin-bottom: 20px;
+
+}
+
+.blog_post_item_img {
+    flex-basis: 20%;
+    max-width: 12%;
+}
+
+.blog_post_item_text {
+    flex-basis: 80%;
+    margin-left: 10px;
+    max-width: 48%;
+    color: white;
+}
 

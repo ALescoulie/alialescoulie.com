@@ -298,6 +298,7 @@ def build_blog_page(posts: List[PostBuildData],
         post_blocks.append(
             block.render(
                 title=post.data.title,
+                img_link=post_build_dir.joinpath(post.data.directory, post.data.thumbnail),
                 link=post_build_dir.joinpath(post.data.directory, post.data.path.stem + ".html"),
                 date=render_date_string(post.data.date),
                 author=render_authors_string(post.data.authors),

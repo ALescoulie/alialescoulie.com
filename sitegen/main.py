@@ -8,6 +8,7 @@ def main():
     test_build_dir: Path = Path("tests/site")
     test_templates: Path = Path("templates")
     test_src_dir: Path = Path("tests/src")
+    test_tags_dir: Path = Path("tags")
 
     if test_build_dir.exists():
         shutil.rmtree("tests/site")
@@ -25,6 +26,7 @@ def main():
         post_build_dir=Path("posts"),
         site_build_dir=test_build_dir,
         templates_dir=test_templates,
+        tags_dir=test_tags_dir,
         verbose=True
         )
 

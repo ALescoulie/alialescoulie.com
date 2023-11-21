@@ -1,4 +1,4 @@
-from typing import Any, Dict, Final, List, NamedTuple, Optional, Tuple
+from typing import Any, Dict, Final, List, NamedTuple, Optional, Tuple, Set
 
 import os
 
@@ -24,6 +24,7 @@ POSTS_DIR: Final[Path] = Path("posts")
 PROJS_DIR: Final[Path] = Path("projects")
 TEMPLATE_DIR: Final[Path] = Path("sitegen/templates")
 POST_BUILD_DIR: Final[Path] = BUILD_DIR.joinpath(Path("posts"))
+TAGS_DIR: Final[Path] = BUILD_DIR.joinpath(Path("tags"))
 
 
 def make_build_dir(build_dir: Path = BUILD_DIR) -> None:
@@ -266,10 +267,15 @@ def copy_post_files(post: PostBuildData,
         )
 
 
+def render_tags(tags: List[str], templates_dir) -> None:
+    
+
+
 def build_blog_page(posts: List[PostBuildData],
                     templates_dir: Path = TEMPLATE_DIR,
                     site_build_dir: Path = BUILD_DIR,
                     post_build_dir: Path = POST_BUILD_DIR,
+                    blog_page_path: Path = Path("blog.html"),
                     verbose: bool = False) -> None:
 
     if verbose:
@@ -285,7 +291,9 @@ def build_blog_page(posts: List[PostBuildData],
 
     date_sort = lambda x : x.data.date
 
-    reverse_cron_posts: List[PostBuildData] = sorted(posts, key=date_sort, reverse=True)
+    reverse_cron_posts: List[PostBuildData] = sorted(posts,
+                                                     key=date_sort,
+                                                     reverse=True)
     
     if verbose:
         print("Posts sorted")
@@ -298,8 +306,10 @@ def build_blog_page(posts: List[PostBuildData],
         post_blocks.append(
             block.render(
                 title=post.data.title,
-                img_link=post_build_dir.joinpath(post.data.directory, post.data.thumbnail),
-                link=post_build_dir.joinpath(post.data.directory, post.data.path.stem + ".html"),
+                img_link=post_build_dir.joinpath(post.data.directory,
+                                                 post.data.thumbnail),
+                link=post_build_dir.joinpath(post.data.directory,
+                                             post.data.path.stem + ".html"),
                 date=render_date_string(post.data.date),
                 author=render_authors_string(post.data.authors),
                 summary=post.data.description + " read more ...",
@@ -313,16 +323,50 @@ def build_blog_page(posts: List[PostBuildData],
         posts="\n".join(post_blocks)
     )
     
-    with open(site_build_dir.joinpath("blog.html"), 'w') as blog_file:
+    with open(site_build_dir.joinpath(blog_page_path), 'w') as blog_file:
         if verbose:
-            print(f"Writing blog page to {site_build_dir.joinpath('blog.html')}")
+            print(
+                f"Writing page to {site_build_dir.joinpath(blog_page_path)}"
+                )
         blog_file.write(blog_page_text)
+
+
+def build_tags_pages(posts: List[PostBuildData],
+                     templates_dir: Path = TEMPLATE_DIR,
+                     site_build_dir: Path = BUILD_DIR,
+                     post_build_dir: Path = POST_BUILD_DIR,
+                     verbose: bool = False) -> None:
+    tags_set: List[str] = []
+    for post in posts:
+        for tag in post.data.tags:
+            tags_set.append(tag)
+
+    tags_set: Set[str] = set(tags_set)
+
+    if verbose:
+        print(f"Found tags {tags_set}")
+
+    tags_map: Dict[str, List[PostBuilData]] = {tag: [] for tag in tags_set}
+
+    for post in posts:
+        for tag in post.data.tags:
+            tags_map[tag].append(post)
+
+    for tag in tags_map.keys():
+        build_blog_page(tags_map[tag],
+                        templates_dir = templates_dir,
+                        site_build_dir = site_build_dir,
+                        post_build_dir = post_build_dir,
+                        blog_page_path = Path(f"{tag}.html"),
+                        verbose = verbose
+                        )
 
 
 def build_blog(post_src_dir: Path = POSTS_DIR,
                post_build_dir: Path = POST_BUILD_DIR,
                site_build_dir: Path = BUILD_DIR,
                templates_dir: Path = TEMPLATE_DIR,
+               tags_dir: Path = TAGS_DIR,
                post_template_name: str = "post_temp.html.jinja",
                verbose: bool = False
                ) -> None:
@@ -343,14 +387,16 @@ def build_blog(post_src_dir: Path = POSTS_DIR,
         post_src_dir = post_src_dir,
         verbose=verbose) for post in posts]
 
-    posts: List[PostBuildData] = [build_post_page(post,
-                                                  site_build_dir=site_build_dir,
-                                                  post_build_dir=post_build_dir,
-                                                  templates_dir=templates_dir,
-                                                  post_template_name=post_template_name,
-                                                  verbose=verbose
-                                                  )
-                                   for post in posts]
+    posts: List[PostBuildData] = [
+            build_post_page(post,
+                            site_build_dir=site_build_dir,
+                            post_build_dir=post_build_dir,
+                            templates_dir=templates_dir,
+                            post_template_name=post_template_name,
+                            verbose=verbose
+                            ) for post in posts
+        ]
+
     for post in posts:
         copy_post_files(
             post,
@@ -360,7 +406,17 @@ def build_blog(post_src_dir: Path = POSTS_DIR,
             verbose=verbose
         )
     
-    build_blog_page(posts, templates_dir, site_build_dir, post_build_dir, verbose=verbose)
+    build_blog_page(posts,
+                    templates_dir,
+                    site_build_dir,
+                    post_build_dir,
+                    verbose=verbose)
+
+    build_tags_pages(posts,
+                     templates_dir = templates_dir,
+                     site_build_dir = site_build_dir,
+                     post_build_dir = post_build_dir,
+                     verbose = verbose)
 
 
 def clean(build_dir: Path = BUILD_DIR):

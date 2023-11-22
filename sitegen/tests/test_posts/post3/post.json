@@ -11,5 +11,5 @@
     "description": "A test latex doc",
     "thumbnail": "static/cicero.png",
     "project": "foobar",
-    "tags": ["foo", "bar"]
+    "tags": ["bar"]
 }

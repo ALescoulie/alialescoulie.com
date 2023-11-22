@@ -267,8 +267,21 @@ def copy_post_files(post: PostBuildData,
         )
 
 
-def render_tags(tags: List[str], templates_dir) -> None:
-    
+def render_tags(tags: List[str], templates_dir, verbose: bool = False) -> None:
+    TemplatesBase: Environment = load_templates(
+        templates_dir,
+        verbose
+    )
+
+    tag_temp: Template = TemplatesBase.get_template("tag.html.jinja")
+    tag_list: List[str] = [
+        tag_temp.render(
+            link=f"{tag}.html",
+            tag=tag
+        ) for tag in tags
+    ]
+
+    return ', '.join(tag_list) 
 
 
 def build_blog_page(posts: List[PostBuildData],
@@ -313,7 +326,7 @@ def build_blog_page(posts: List[PostBuildData],
                 date=render_date_string(post.data.date),
                 author=render_authors_string(post.data.authors),
                 summary=post.data.description + " read more ...",
-                tags=post.data.tags
+                tags=render_tags(post.data.tags, templates_dir, verbose)
             )
         )
 
@@ -418,6 +431,13 @@ def build_blog(post_src_dir: Path = POSTS_DIR,
                      post_build_dir = post_build_dir,
                      verbose = verbose)
 
+
+#def build_project_page(projects_dir: Path,
+#                       templates_dir: Path,
+#                       site_build_dir: Path
+#                       projects_build_dir: Path
+#                       verbose: bool = True)
+    
 
 def clean(build_dir: Path = BUILD_DIR):
     r"""Warning will delete everything in this directory."""

@@ -137,9 +137,9 @@ def parse_post(post_json_path: Path, posts_dir: Path) -> PostData:
             post_json["project"],
             post_json["tags"]
         )
-        
+ 
     return Post
-            
+
 
 def collect_posts(posts_src_dir: Path = POSTS_DIR,
                   verbose: bool = False) -> List:
@@ -228,8 +228,12 @@ def build_post_page(
         post_html=Post.post_src
         )
 
-    post_dir: Path = site_build_dir.joinpath(post_build_dir, Post.post_data.directory)
-    post_path: Path = post_dir.joinpath(Post.post_data.path.stem + ".html")    
+    post_dir: Path = site_build_dir.joinpath(
+            post_build_dir,
+            Post.post_data.directory
+        )
+
+    post_path: Path = post_dir.joinpath(Post.post_data.path.stem + ".html")
 
     if verbose:
         print(f"writing post to {post_path}")
@@ -291,7 +295,6 @@ def build_blog_page(posts: List[PostBuildData],
                     blog_page_path: Path = Path("blog.html"),
                     verbose: bool = False) -> None:
 
-    if verbose:
         print(f"Building blog page")
 
     TemplatesBase: Environment = load_templates(templates_dir, verbose)
@@ -374,15 +377,13 @@ def build_tags_pages(posts: List[PostBuildData],
                         verbose = verbose
                         )
 
-
 def build_blog(post_src_dir: Path = POSTS_DIR,
                post_build_dir: Path = POST_BUILD_DIR,
                site_build_dir: Path = BUILD_DIR,
                templates_dir: Path = TEMPLATE_DIR,
                tags_dir: Path = TAGS_DIR,
                post_template_name: str = "post_temp.html.jinja",
-               verbose: bool = False
-               ) -> None:
+               verbose: bool = False) -> None:
     r"""Builds the blog over several steps
     """
     if verbose: 
@@ -432,12 +433,58 @@ def build_blog(post_src_dir: Path = POSTS_DIR,
                      verbose = verbose)
 
 
-#def build_project_page(projects_dir: Path,
-#                       templates_dir: Path,
-#                       site_build_dir: Path
-#                       projects_build_dir: Path
-#                       verbose: bool = True)
-    
+class ProjectData(NamedTuple):
+    path: Path
+    directory: Path
+    format: str
+    static: Path
+    project: str
+
+
+def parse_proj(proj_json_path: Path, proj_src_dir: Path) -> ProjectData:
+    with open(proj_json_path, 'r') as file:
+        proj_json: Dict[str, Any] = json.load(file)
+
+        data: ProjectData = ProjectData(
+            Path(proj_json["file_path"]),
+            Path(proj_json["proj_dir"]),
+            proj_json["format"],
+            Path(proj_json["static_dir"]),
+            proj_json["project"]
+        )
+
+        return data
+
+
+def collect_projects(proj_src_dir: Path = PROJS_DIR,
+                     site_src_dir: Path = SRC_DIR,
+                     verbose: bool = true) -> List[ProjectData]:
+    proj_list: List(str) = glob.glob("*/proj.json", root_dir=proj_src_dir)
+    if verbose:
+        print(f"Collecting Posts in {proj_src_dir}")
+        for post in post_list:
+            print(post)
+    return [
+        parse_post(
+            Path.joinpath(proj_src_dir, Path(json_path)),
+            posts_src_dir) for json_path in post_list
+            ]
+
+class ProjectHTML(NamedTuple):
+    proj_data: ProjectData
+    proj_src: str
+
+
+
+
+
+def build_projects_html(projects_dir: Path,
+                       templates_dir: Path,
+                       site_build_dir: Path
+                       projects_build_dir: Path
+                       verbose: bool = True) -> None:
+    pass
+
 
 def clean(build_dir: Path = BUILD_DIR):
     r"""Warning will delete everything in this directory."""

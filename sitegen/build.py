@@ -112,7 +112,7 @@ class PostData(NamedTuple):
     date: "date"
     description: str
     thumbnail: Path
-    project: List[str]
+    project: Optional[List[str]]
     tags: List[str]
 
 
@@ -134,7 +134,7 @@ def parse_post(post_json_path: Path, posts_dir: Path) -> PostData:
             ),
             post_json["description"],
             Path(post_json["thumbnail"]),
-            post_json["project"],
+            post_json["projects"],
             post_json["tags"]
         )
  
@@ -217,7 +217,10 @@ def build_post_page(
 
     PostTemp: Template = TemplatesBase.get_template(post_template_name)
 
-    header_text: str = header.render(title=f"{Post.post_data.title} - Alia Lescoulie", depth="../../")
+    header_text: str = header.render(
+        title=f"{Post.post_data.title} - Alia Lescoulie",
+        depth="../../"
+        )
 
     post_text: str = PostTemp.render(
         header=header_text,
@@ -288,35 +291,33 @@ def render_tags(tags: List[str], templates_dir, verbose: bool = False) -> None:
     return ', '.join(tag_list) 
 
 
-def build_blog_page(posts: List[PostBuildData],
-                    templates_dir: Path = TEMPLATE_DIR,
-                    site_build_dir: Path = BUILD_DIR,
-                    post_build_dir: Path = POST_BUILD_DIR,
-                    blog_page_path: Path = Path("blog.html"),
-                    verbose: bool = False) -> None:
+date_sort = lambda x : x.data.date
 
-        print(f"Building blog page")
 
+def build_post_blocks(posts: List[PostBuildData],
+                      templates_dir: Path,
+                      post_build_dir: Path,
+                      link_depth: int,
+                      post_sort_lambda,
+                      reverse_cron: bool = True,
+                      verbose: bool = True) -> List[str]:
     TemplatesBase: Environment = load_templates(templates_dir, verbose)
 
     header: Template = TemplatesBase.get_template("header.html.jinja")
     navbar: Template = TemplatesBase.get_template("navbar.html.jinja")
     block: Template = TemplatesBase.get_template("post_block.html.jinja")
-
     blog_page: Template = TemplatesBase.get_template("blog.html.jinja")
 
-    date_sort = lambda x : x.data.date
-
-    reverse_cron_posts: List[PostBuildData] = sorted(posts,
-                                                     key=date_sort,
-                                                     reverse=True)
+    sorted_posts: List[PostBuildData] = sorted(posts,
+                                               key=post_sort_lambda,
+                                               reverse=reverse_cron)
     
     if verbose:
         print("Posts sorted")
 
     post_blocks: List[str] = []
 
-    for post in reverse_cron_posts:
+    for post in sorted_posts:
         if verbose:
             print(f"Building block for {post.data.title}")
         post_blocks.append(
@@ -333,6 +334,27 @@ def build_blog_page(posts: List[PostBuildData],
             )
         )
 
+    return post_blocks
+
+
+def build_blog_page(posts: List[PostBuildData],
+                    templates_dir: Path = TEMPLATE_DIR,
+                    site_build_dir: Path = BUILD_DIR,
+                    post_build_dir: Path = POST_BUILD_DIR,
+                    blog_page_path: Path = Path("blog.html"),
+                    verbose: bool = False) -> None:
+
+        print(f"Building blog page")
+
+    post_blocks = build_post_blocks(posts,
+                                    templates_dir
+                                    post_build_dir
+                                    link_depth
+                                    post_sort_lambda,
+                                    reverse_cron
+                                    verbose)
+
+    
     blog_page_text: str = blog_page.render(
         header=header.render(title="Blog"),
         navbar=navbar.render(),
@@ -470,20 +492,42 @@ def collect_projects(proj_src_dir: Path = PROJS_DIR,
             posts_src_dir) for json_path in post_list
             ]
 
+
 class ProjectHTML(NamedTuple):
     proj_data: ProjectData
     proj_src: str
 
 
+def build_project_page_html(projects: ProjectData,
+                            projects_dir: Path,
+                            templates_dir: Path,
+                            site_build_dir: Path,
+                            projects_build_dir: Path,
+                            posts: PostBuildData,
+                            verbose: bool = True
+                            ) -> List[ProjectHTML]:
+    proj_posts: Dict[str, List[PostBuildData]] = {
+        proj.project: [] for proj in projects
+    }
 
+    for post in posts:
+        if post.projects is not None:
+            for proj in post.projects
+                proj_posts[proj].append(post)
 
+    proj_posts: Dict[str, Set[PostBuildData]] = {
+        proj: set(proj_posts[proj])
 
-def build_projects_html(projects_dir: Path,
-                       templates_dir: Path,
-                       site_build_dir: Path
-                       projects_build_dir: Path
-                       verbose: bool = True) -> None:
-    pass
+    }
+
+    TemplatesBase: Environment = load_templates(
+        templates_dir,
+        verbose
+    )
+
+    header: Template = TemplatesBase.get_template("header.html.jinja")
+    navbar: Template = TemplatesBase.get_template("navbar.html.jinja")
+
 
 
 def clean(build_dir: Path = BUILD_DIR):

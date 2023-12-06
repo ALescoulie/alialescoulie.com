@@ -343,17 +343,21 @@ def build_blog_page(posts: List[PostBuildData],
                     post_build_dir: Path = POST_BUILD_DIR,
                     blog_page_path: Path = Path("blog.html"),
                     verbose: bool = False) -> None:
-
+    if verbose:
         print(f"Building blog page")
+    
+    TemplatesBase: Environment = load_templates(templates_dir, verbose=verbose)
+    blog_page: Template = TemplatesBase.get_template("blog.html.jinja")
+    header: Template = TemplatesBase.get_template("header.html.jinja")
+    navbar: Template = TemplatesBase.get_template("navbar.html.jinja")
 
     post_blocks = build_post_blocks(posts,
-                                    templates_dir
-                                    post_build_dir
-                                    link_depth
-                                    post_sort_lambda,
-                                    reverse_cron
+                                    templates_dir,
+                                    post_build_dir,
+                                    2,
+                                    date_sort,
+                                    True,
                                     verbose)
-
     
     blog_page_text: str = blog_page.render(
         header=header.render(title="Blog"),
@@ -405,7 +409,7 @@ def build_blog(post_src_dir: Path = POSTS_DIR,
                templates_dir: Path = TEMPLATE_DIR,
                tags_dir: Path = TAGS_DIR,
                post_template_name: str = "post_temp.html.jinja",
-               verbose: bool = False) -> None:
+               verbose: bool = False) -> List[PostBuildData]:
     r"""Builds the blog over several steps
     """
     if verbose: 
@@ -453,6 +457,7 @@ def build_blog(post_src_dir: Path = POSTS_DIR,
                      site_build_dir = site_build_dir,
                      post_build_dir = post_build_dir,
                      verbose = verbose)
+    return posts
 
 
 class ProjectData(NamedTuple):
@@ -460,7 +465,10 @@ class ProjectData(NamedTuple):
     directory: Path
     format: str
     static: Path
-    project: str
+    thumbnail: Path
+    name: str
+    date: Any
+    description: str
 
 
 def parse_proj(proj_json_path: Path, proj_src_dir: Path) -> ProjectData:
@@ -472,7 +480,14 @@ def parse_proj(proj_json_path: Path, proj_src_dir: Path) -> ProjectData:
             Path(proj_json["proj_dir"]),
             proj_json["format"],
             Path(proj_json["static_dir"]),
-            proj_json["project"]
+            Path(proj_json["thumbnail"]),
+            proj_json["project"],
+            datetime.date(
+                day=proj_json["day"],
+                month=proj_json["month"],
+                year=proj_json["year"]
+            ),
+            proj_json["description"]
         )
 
         return data
@@ -480,45 +495,38 @@ def parse_proj(proj_json_path: Path, proj_src_dir: Path) -> ProjectData:
 
 def collect_projects(proj_src_dir: Path = PROJS_DIR,
                      site_src_dir: Path = SRC_DIR,
-                     verbose: bool = true) -> List[ProjectData]:
+                     verbose: bool = True) -> List[ProjectData]:
     proj_list: List(str) = glob.glob("*/proj.json", root_dir=proj_src_dir)
     if verbose:
         print(f"Collecting Posts in {proj_src_dir}")
-        for post in post_list:
-            print(post)
+        for proj in proj_list:
+            print(proj)
     return [
-        parse_post(
+        parse_proj(
             Path.joinpath(proj_src_dir, Path(json_path)),
-            posts_src_dir) for json_path in post_list
+            proj_src_dir) for json_path in proj_list
             ]
 
 
 class ProjectHTML(NamedTuple):
-    proj_data: ProjectData
+    data: ProjectData
     proj_src: str
 
 
-def build_project_page_html(projects: ProjectData,
-                            projects_dir: Path,
+def build_project_page_html(project: ProjectData,
+                            posts: List[PostBuildData],
                             templates_dir: Path,
+                            projects_src_dir: Path,
                             site_build_dir: Path,
+                            post_build_dir: Path,
                             projects_build_dir: Path,
-                            posts: PostBuildData,
                             verbose: bool = True
                             ) -> List[ProjectHTML]:
-    proj_posts: Dict[str, List[PostBuildData]] = {
-        proj.project: [] for proj in projects
-    }
-
+    proj_posts: Set[PostBuildData] = set()
+    print(type(proj_posts[0]))
     for post in posts:
-        if post.projects is not None:
-            for proj in post.projects
-                proj_posts[proj].append(post)
-
-    proj_posts: Dict[str, Set[PostBuildData]] = {
-        proj: set(proj_posts[proj])
-
-    }
+        if post.data.project is not None and project.name in post.data.project:
+            proj_posts.add(post)
 
     TemplatesBase: Environment = load_templates(
         templates_dir,
@@ -527,7 +535,216 @@ def build_project_page_html(projects: ProjectData,
 
     header: Template = TemplatesBase.get_template("header.html.jinja")
     navbar: Template = TemplatesBase.get_template("navbar.html.jinja")
+    proj_page: Template = TemplatesBase.get_template("project_Page.html.jinja")
 
+    proj_src_path: Path = projects_src_dir.joinpath(
+        project.directory,
+        project.path
+    )
+
+    with open(proj_src_path, 'r') as proj_file:
+        proj_text: str = proj_file.read()
+        proj_info: Any = pandoc.read(proj_text, format=project.format)
+        proj_html: str = pandoc.write(proj_info, format="html")
+   
+    proj_post_blocks: List[str] = build_post_blocks(
+        list(proj_posts),
+        templates_dir,
+        post_build_dir,
+        2,
+        date_sort,
+        reverse_cron = False,
+        verbose = verbose
+    )
+
+    proj_page_html: str = proj_page.render(
+        header = header.render(title=f"project.name - Alia Lescoulie", depth="../../"),
+        navbar = navbar.render(depth="../../"),
+        project_name = project.name,
+        proj_text = proj_html,
+        posts = proj_post_blocks
+    )
+
+    return ProjectHTML(project, proj_page_html)
+
+
+class ProjectBuildData(NamedTuple):
+    path: Path
+    directory: Path
+    data: ProjectData
+
+
+def write_project(
+    project: ProjectHTML,
+    site_build_dir: Path,
+    projects_build_dir: Path,
+    verbose: bool = False
+    ) -> ProjectBuildData:
+
+    proj_dir: Path = site_build_dir.joinpath(
+        projects_build_dir,
+        project.data.directory
+    )
+
+    proj_path = proj_dir.joinpath(project.data.path.stem + ".html")
+
+    if verbose:
+        print(f"writing project to {proj_path}")
+
+    proj_dir.mkdir(parents=True, exist_ok=True)
+
+    with open(proj_path, "w") as proj_file:
+        proj_file.write(project.proj_src)
+
+    return ProjectBuildData(proj_path, proj_dir, project.data)
+
+
+def copy_project_files(
+    project: ProjectBuildData,
+    site_build_dir: Path,
+    projects_src_dir: Path,
+    projects_build_dir: Path,
+    verbose: bool = False
+    ) -> None:
+
+    if project.data.static is None:
+        return None
+    else:
+        new_static_dir: Path = site_build_dir.joinpath(
+            projects_build_dir,
+            project.data.directory,
+            "static"
+        )
+
+        if not new_static_dir.exists():
+            new_static_dir.mkdir()
+
+        shutil.copytree(
+            projects_src_dir.joinpath(project.data.directory, project.data.static),
+            new_static_dir,
+            dirs_exist_ok=True
+        )
+
+
+def build_projects_page(
+        projects: List[ProjectBuildData],
+        templates_dir: Path,
+        site_build_dir: Path,
+        projects_build_dir: Path,
+        verbose: bool = True
+    ) -> None:
+
+    if verbose:
+        print("Building project page")
+
+    TemplatesBase: Environment = load_templates(templates_dir, verbose)
+
+    proj_block_template: Template = TemplatesBase.get_template("project_block.html.jinja")
+    
+    cron_sort = lambda x : x.data.date
+
+    projects: List[ProjectBuildData] = sorted(projects, key=cron_sort)
+
+    proj_blocks: List[str] = []
+
+    for project in projects:
+        if verbose:
+            print(f"Build block from {project.data.name}")
+
+        proj_blocks.append(
+            proj_block_template.render(
+                title=project.data.name,
+                img_link=projects_build_dir.joinpath(
+                    project.data.directory,
+                    project.data.thumbnail
+                ),
+                link=projects_build_dir.joinpath(
+                    project.data.directory,
+                    project.data.path.stem + ".html"
+                ),
+                data=render_date_string(project.data.date),
+                summary=project.data.description + " read more ..."
+            )
+        )
+    
+    header: Environment = TemplatesBase.get_template("header.html.jinja")
+    navbar: Environment = TemplatesBase.get_template("navbar.html.jinja")
+    proj_page_template: Environment = TemplatesBase.get_template("projects.html.jinja")
+
+    proj_page_text: str = proj_page_template.render(
+        header=header.render(title="Projects - Alia Lescoulie"),
+        navbar=navbar.render(),
+        projects="\n".join(proj_blocks)
+    )
+
+    if verbose:
+        print(f"Writing page to {site_build_dir.joinpath('projects.html')}")
+
+    with open(site_build_dir.joinpath("projects.html"), 'w') as projs_file:
+        projs_file.write(proj_page_text)
+
+
+def build_projects(projects_src_dir: Path,
+                   posts: List[PostBuildData],
+                   templates_dir: Path,
+                   site_src_dir: Path,
+                   site_build_dir: Path,
+                   posts_build_dir: Path,
+                   projects_build_dir: Path,
+                   verbose: bool = True) -> None:
+    if verbose:
+        print("Starting projects construction")
+
+    projs_data: List[ProjectData] = collect_projects(
+        projects_src_dir,
+        site_src_dir,
+        verbose = verbose
+    )
+
+    if verbose:
+        print(f"Collected {len(projs_data)}")
+
+    proj_html: List[ProjectHTML] = [
+            build_project_page_html(
+                project,
+                posts,
+                templates_dir,
+                projects_src_dir,
+                site_build_dir,
+                posts_build_dir,
+                projects_build_dir,
+                verbose = verbose
+            ) for project in projs_data
+    ]
+
+    proj_builds: List[PostBuildData] = [
+        write_project(
+            project,
+            site_build_dir,
+            projects_build_dir,
+            verbose = verbose
+        ) for project in proj_html
+    ]
+
+    for proj in proj_builds:
+        copy_project_files(
+            proj,
+            site_build_dir,
+            projects_src_dir,
+            projects_build_dir,
+            verbose = verbose
+        )
+
+    if verbose:
+        print("Building projects page")
+
+    build_projects_page(
+        proj_builds,
+        templates_dir,
+        site_build_dir,
+        projects_build_dir,
+        verbose = verbose
+    )
 
 
 def clean(build_dir: Path = BUILD_DIR):

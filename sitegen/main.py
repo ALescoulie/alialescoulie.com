@@ -21,14 +21,25 @@ def main():
         src_dir=test_src_dir,
     )
 
-    build.build_blog(
+    blog_posts: List[build.PostBuildData] = build.build_blog(
         post_src_dir=Path("tests/test_posts"),
         post_build_dir=Path("posts"),
         site_build_dir=test_build_dir,
         templates_dir=test_templates,
         tags_dir=test_tags_dir,
         verbose=True
-        )
+    )
+
+    build.build_projects(
+        Path("tests/test_projects"),
+        blog_posts,
+        test_templates,
+        test_src_dir,
+        test_build_dir,
+        Path("posts"),
+        Path("projects"),
+        verbose=True
+    )
 
 
 if __name__ == "__main__":

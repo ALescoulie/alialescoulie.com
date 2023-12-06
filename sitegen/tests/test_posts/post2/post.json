@@ -10,6 +10,6 @@
     "year": 2023,
     "description": "A test latex doc",
     "thumbnail": "static/cicero.png",
-    "project": "foobar",
+    "projects": ["proj1", "proj2"],
     "tags": ["foo"]
 }

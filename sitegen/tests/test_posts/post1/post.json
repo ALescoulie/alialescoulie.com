@@ -10,6 +10,6 @@
     "year": 2023,
     "description": "A test jupyter notebook",
     "thumbnail": "static/cicero.jpg",
-    "projects": ["foobar"],
+    "projects": ["proj1"],
     "tags": ["foo", "bar"]
 }

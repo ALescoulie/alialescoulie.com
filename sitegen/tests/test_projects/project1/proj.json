@@ -1,8 +1,13 @@
 {
-  "file_path": "proj.md",
-  "proj_dir": "proj1",
-  "format": "latex",
+  "file_path": "project.md",
+  "proj_dir": "project1",
+  "format": "markdown",
   "static_dir": "static",
-  "project": "proj1"
+  "thumbnail": "static/cicero.jpg",
+  "project": "proj1", 
+  "day": 12,
+  "month": 1,
+  "year": 2023,
+  "description": "Lorem Ipsum"
 }
 

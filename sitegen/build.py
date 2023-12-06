@@ -340,7 +340,7 @@ def build_post_blocks(posts: List[PostBuildData],
                     post.data.path.stem + ".html"),
                 date=render_date_string(post.data.date),
                 author=render_authors_string(post.data.authors),
-                summary=post.data.description + " read more ...",
+                summary=post.data.description,
                 tags=render_tags(
                     post.data.tags,
                     templates_dir,
@@ -358,6 +358,7 @@ def build_blog_page(posts: List[PostBuildData],
                     site_build_dir: Path = BUILD_DIR,
                     post_build_dir: Path = POST_BUILD_DIR,
                     blog_page_path: Path = Path("blog.html"),
+                    title: str = "Blog",
                     verbose: bool = False) -> None:
     if verbose:
         print(f"Building blog page")
@@ -375,6 +376,7 @@ def build_blog_page(posts: List[PostBuildData],
     blog_page_text: str = blog_page.render(
         header=header.render(title="Blog"),
         navbar=navbar.render(),
+        title=title,
         posts="\n".join(post_blocks)
     )
     
@@ -413,6 +415,7 @@ def build_tags_pages(posts: List[PostBuildData],
                         site_build_dir = site_build_dir,
                         post_build_dir = post_build_dir,
                         blog_page_path = Path(f"{tag}.html"),
+                        title = f"{tag} Blog Posts",
                         verbose = verbose
                         )
 
@@ -675,7 +678,7 @@ def build_projects_page(
                     project.data.path.stem + ".html"
                 ),
                 data=render_date_string(project.data.date),
-                summary=project.data.description + " read more ..."
+                summary=project.data.description
             )
         )
     

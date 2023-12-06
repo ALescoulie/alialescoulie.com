@@ -9,6 +9,8 @@ body {
 
 .header {
     text-align: center;
+    font-size: large;
+    color: white;
 }
 
 .header h1 {
@@ -43,11 +45,17 @@ td {
 
 h1 {
     color: white;
-    font-size: large;
+    font-size: xx-large;
     font-family: "Times New Roman";
 }
 
 h2 { /*For table cell text*/
+    color: white;
+    font-size: large;
+    font-family: "Times New Roman";
+}
+
+h3 {
     color: white;
     font-family: "Times New Roman";
 }
@@ -103,6 +111,11 @@ img {
 .left_img_container p {
     font-family: "Times New Roman";
     color: white;
+}
+
+.post-header {
+    color: white;
+    text-align: center;
 }
 
 .blog_text {

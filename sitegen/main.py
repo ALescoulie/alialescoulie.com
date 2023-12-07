@@ -1,10 +1,14 @@
 from pathlib import Path
 import shutil
 
+import click
+
 import build
 
 
-def main():
+@click.command()
+@click.option("test", help="Builds a test version of the site in sitegen/tests/site")
+def test_build():
     test_build_dir: Path = Path("tests/site")
     test_templates: Path = Path("templates")
     test_src_dir: Path = Path("tests/src")
@@ -41,7 +45,14 @@ def main():
         verbose=True
     )
 
-
-if __name__ == "__main__":
-    main()
+@click.command()
+@click.option("build", help="builds site at site_out")
+def build():
+    
+    build.clean()
+    
+    buid.copy_static()
+    build.build_pages()
+    blog_posts: List[build.PostBuildData] = build.build_blog()
+    build.build_projects(blog_posts)
 

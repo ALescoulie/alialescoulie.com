@@ -17,7 +17,7 @@ from jinja2 import Environment, Template, FileSystemLoader, select_autoescape
 import pandoc
 
 # Pre-defined site names
-BUILD_DIR: Final[Path] = Path("site")
+BUILD_DIR: Final[Path] = Path("site_out")
 SRC_DIR: Final[Path] = Path("site_src")
 STATIC_DIR: Final[Path] = Path("site_src/static")
 POSTS_DIR: Final[Path] = Path("blog_posts")
@@ -730,8 +730,8 @@ def build_projects_page(
         projs_file.write(proj_page_text)
 
 
-def build_projects(projects_src_dir: Path,
-                   posts: List[PostBuildData],
+def build_projects(posts: List[PostBuildData],
+                   projects_src_dir: Path = PROJS_DIR,
                    templates_dir: Path = TEMPLATE_DIR,
                    site_src_dir: Path = SRC_DIR,
                    site_build_dir: Path = BUILD_DIR,

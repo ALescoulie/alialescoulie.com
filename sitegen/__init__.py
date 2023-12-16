@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from . import build
 
 
@@ -26,8 +28,8 @@ def build_test():
     )
 
     build.build_projects(
-        Path("tests/test_projects"),
         blog_posts,
+        Path("tests/test_projects"),
         test_templates,
         test_src_dir,
         test_build_dir,
@@ -40,7 +42,7 @@ def build_test():
 def build_production(): 
     build.clean()
     
-    buid.copy_static()
+    build.copy_static()
     build.build_pages()
     blog_posts: List[build.PostBuildData] = build.build_blog()
     build.build_projects(blog_posts)

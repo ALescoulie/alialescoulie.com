@@ -445,7 +445,6 @@ def build_blog(post_src_dir: Path = POSTS_DIR,
                post_build_dir: Path = POST_BUILD_DIR,
                site_build_dir: Path = BUILD_DIR,
                templates_dir: Path = TEMPLATE_DIR,
-               tags_dir: Path = TAGS_DIR,
                post_template_name: str = "post_temp.html.jinja",
                verbose: bool = False) -> List[PostBuildData]:
     r"""Builds the blog over several steps

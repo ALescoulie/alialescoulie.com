@@ -795,5 +795,6 @@ def build_projects(posts: List[PostBuildData],
 
 def clean(build_dir: Path = BUILD_DIR):
     r"""Warning will delete everything in this directory."""
-    shutil.rmtree(build_dir)
+    if build_dir.exists():
+        shutil.rmtree(build_dir)
 

@@ -3,7 +3,7 @@ tests/site/*
 .vscode/*
 **/__pycache__/*
 *.pyc
-
+result
 
 # Added by cargo
 

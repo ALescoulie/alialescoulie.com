@@ -1,21 +1,20 @@
 from pathlib import Path
+import shutil
 
 from . import build
 
 
 def build_test():
     test_build_dir: Path = Path("tests/site")
-    test_templates: Path = Path("templates")
     test_src_dir: Path = Path("tests/src")
 
     if test_build_dir.exists():
         shutil.rmtree("tests/site")
     build.make_build_dir(test_build_dir)
     
-    build.copy_static(Path("../site_src/static"), test_build_dir)
+    build.copy_static(Path("site_src/static"), test_build_dir)
     build.build_pages(
         build_dir=test_build_dir,
-        templates_dir=test_templates,
         src_dir=test_src_dir,
     )
 
@@ -23,18 +22,16 @@ def build_test():
         post_src_dir=Path("tests/test_posts"),
         post_build_dir=Path("posts"),
         site_build_dir=test_build_dir,
-        templates_dir=test_templates,
         verbose=True
     )
 
     build.build_projects(
-        blog_posts,
-        Path("tests/test_projects"),
-        test_templates,
-        test_src_dir,
-        test_build_dir,
-        Path("posts"),
-        Path("projects"),
+        posts=blog_posts,
+        projects_src_dir=Path("tests/test_projects"),
+        site_src_dir=test_src_dir,
+        site_build_dir=test_build_dir,
+        posts_build_dir=Path("posts"),
+        projects_build_dir=Path("projects"),
         verbose=True
     )
 

@@ -1,10 +1,19 @@
 from pathlib import Path
+import os
 import shutil
+
+import pandoc
 
 from . import build
 
 
+PANDOC_PATH_ENV = 'PANDOC_BINARY'
+
+
 def build_test():
+    if pandoc_path := os.environ.get(PANDOC_PATH_ENV):
+        pandoc.configure(path=pandoc_path)
+
     test_build_dir: Path = Path("tests/site")
     test_src_dir: Path = Path("tests/src")
 
@@ -37,6 +46,9 @@ def build_test():
 
 
 def build_production(): 
+    if pandoc_path := os.environ.get(PANDOC_PATH_ENV):
+        pandoc.configure(path=pandoc_path)
+
     build.clean()
     
     build.copy_static()

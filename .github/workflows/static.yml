@@ -33,21 +33,15 @@ jobs:
       - uses: cachix/install-nix-action@v22
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Cloning blog posts from GitHub repo
-        run: git clone https://github.com/ALescoulie/blog_posts.git
-      - name: Building Site Generator with Nix
+      - name: Building Site with Nix
         run: nix build
-      - name: Verifying flake
-        run: nix flake check
-      - name: Building site
-        run: poetry run build
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
           # Upload entire repository
-          path: 'site_out'
+          path: 'result'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v3

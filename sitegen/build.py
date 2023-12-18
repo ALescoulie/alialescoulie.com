@@ -25,9 +25,7 @@ POSTS_DIR: Final[Path] = Path("blog_posts")
 PROJS_DIR: Final[Path] = SITEGEN_DIR / "projects"
 TEMPLATE_DIR: Final[Path] = SITEGEN_DIR / "templates"
 POST_BUILD_DIR: Final[Path] = BUILD_DIR / "posts"
-PROJS_DIR: Final[Path] = Path("projects")
 PROJS_BUILD_DIR: Final[Path] = BUILD_DIR / "projects"
-
 
 
 def make_build_dir(build_dir: Path = BUILD_DIR) -> None:
@@ -161,6 +159,8 @@ def collect_posts(posts_src_dir: Path = POSTS_DIR,
         print(f"Collecting Posts in {posts_src_dir}")
         for post in post_list:
             print(post)
+    if len(post_list) == 0:
+        return []
     return [
         parse_post(
             Path.joinpath(posts_src_dir, Path(json_path)),
@@ -457,6 +457,10 @@ def build_blog(post_src_dir: Path = POSTS_DIR,
         posts_src_dir=post_src_dir,
         verbose=verbose
         )
+
+    if len(posts) == 0:
+        return []
+
     if verbose:
         print(f"Collected {len(posts)} posts")
     

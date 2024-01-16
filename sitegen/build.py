@@ -804,7 +804,9 @@ def build_games(games_dir: Path = GAMES_DIR,
                 games_build_dir: Path = GAMES_BUILD_DIR,
                 build_dir: Path = BUILD_DIR,
                 templates_dir: Path = TEMPLATE_DIR) -> None:
-    
+   
+    make_build_dir(games_build_dir)
+
     TemplatesBase: Environment = load_templates(templates_dir=templates_dir)
 
     Pages: Environment = Environment(

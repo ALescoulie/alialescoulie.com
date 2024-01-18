@@ -109,9 +109,10 @@ def build_pages(build_dir: Path = BUILD_DIR,
     
 
 def copy_static(static_dir: Path = STATIC_DIR,
-                build_dir: Path = BUILD_DIR) -> None:
+                build_dir: Path = BUILD_DIR,
+                dir_name: str = "static") -> None:
     make_build_dir(build_dir=build_dir)
-    shutil.copytree(static_dir, Path(build_dir, "static"))
+    shutil.copytree(static_dir, Path(build_dir, dir_name))
 
 
 class PostData(NamedTuple):
@@ -840,7 +841,10 @@ def build_games(games_dir: Path = GAMES_DIR,
                 encoding='utf-8'
                  ) as file:
 
-            file.write(page_text) 
+            file.write(page_text)
+
+    copy_static(games_dir / "static", games_build_dir)
+    copy_static(games_dir / "scripts", games_build_dir, "scripts")
 
 
 def clean(build_dir: Path = BUILD_DIR):

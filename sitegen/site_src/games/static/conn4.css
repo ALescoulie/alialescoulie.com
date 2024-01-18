@@ -1,7 +1,7 @@
 form.conn4_inputs {
     input[type="radio"] {
         cursor: pointer;
-    align-items: center;
+    }
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -17,5 +17,9 @@ form.conn4_inputs {
 label {
     color: white;
     margin-right: 2%;
+}
+
+p {
+    color: white;
 }
 

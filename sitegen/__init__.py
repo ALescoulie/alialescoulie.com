@@ -55,4 +55,5 @@ def build_production():
     build.build_pages()
     blog_posts: List[build.PostBuildData] = build.build_blog(verbose=True)
     build.build_projects(blog_posts)
+    build.build_games()
 

@@ -26,6 +26,8 @@ PROJS_DIR: Final[Path] = SITEGEN_DIR / "projects"
 TEMPLATE_DIR: Final[Path] = SITEGEN_DIR / "templates"
 POST_BUILD_DIR: Final[Path] = BUILD_DIR / "posts"
 PROJS_BUILD_DIR: Final[Path] = BUILD_DIR / "projects"
+GAMES_DIR: Final[Path] = SRC_DIR / "games"
+GAMES_BUILD_DIR: Final[Path] = BUILD_DIR / "games"
 
 
 def make_build_dir(build_dir: Path = BUILD_DIR) -> None:
@@ -107,9 +109,10 @@ def build_pages(build_dir: Path = BUILD_DIR,
     
 
 def copy_static(static_dir: Path = STATIC_DIR,
-                build_dir: Path = BUILD_DIR) -> None:
+                build_dir: Path = BUILD_DIR,
+                dir_name: str = "static") -> None:
     make_build_dir(build_dir=build_dir)
-    shutil.copytree(static_dir, Path(build_dir, "static"))
+    shutil.copytree(static_dir, Path(build_dir, dir_name))
 
 
 class PostData(NamedTuple):
@@ -796,6 +799,52 @@ def build_projects(posts: List[PostBuildData],
         projects_build_dir,
         verbose = verbose
     )
+
+
+def build_games(games_dir: Path = GAMES_DIR,
+                games_build_dir: Path = GAMES_BUILD_DIR,
+                build_dir: Path = BUILD_DIR,
+                templates_dir: Path = TEMPLATE_DIR) -> None:
+   
+    make_build_dir(games_build_dir)
+
+    TemplatesBase: Environment = load_templates(templates_dir=templates_dir)
+
+    Pages: Environment = Environment(
+        loader=FileSystemLoader(games_dir),
+    )
+
+
+    header: Template = TemplatesBase.get_template("header.html.jinja")
+    navbar: Template = TemplatesBase.get_template("navbar.html.jinja")
+
+
+    for page in glob.glob(f"{games_dir}/*.html.jinja"):
+        page_path: Path = Path(page)
+
+        page_temp: Template = Pages.get_template(
+            page_path.stem + page_path.suffix
+            )
+
+        page_title: str = "Alia Lescoulie" if page_path.stem == "index.html" \
+            else f"{str(page_path.stem)[:-5].capitalize()} - Alia Lescoulie"
+
+        page_header: str = header.render(title=page_title, depth="../")
+
+        page_text: str = page_temp.render(
+                header=page_header,
+                navbar=navbar.render(depth="../"))
+
+        with open(
+                games_build_dir.joinpath(page_path.stem),
+                'w',
+                encoding='utf-8'
+                 ) as file:
+
+            file.write(page_text)
+
+    copy_static(games_dir / "static", games_build_dir)
+    copy_static(games_dir / "scripts", games_build_dir, "scripts")
 
 
 def clean(build_dir: Path = BUILD_DIR):

@@ -1,13 +1,13 @@
 {
   "file_path": "mdsapt.md",
   "proj_dir": "mdsapt",
-  "format": "latex",
+  "format": "markdown",
   "static_dir": "static",
   "thumbnail": "static/",
-  "project": "proj1", 
-  "day": 12,
-  "month": 1,
-  "year": 2023,
+  "project": "MD-SAPT", 
+  "day": 2,
+  "month": 2,
+  "year": 2024,
   "description": "A Python library for running quantum chemical calculations on moleulcar dynamics trajectories "
 }
 

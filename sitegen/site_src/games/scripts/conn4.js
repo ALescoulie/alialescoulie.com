@@ -1,9 +1,9 @@
 function getPlayers() {
-    let inputs = document.getElementById("input")
+    let inputs = document.getElementsByTagName("input")
     for (i = 0; i < inputs.length; i++) {
         let input = inputs[i];
 
-        if (input.type === "radio" && input.name === "players") {
+        if (input.type === "radio" && input.name === "players" && input.checked) {
             return input.value;
         }
     }
@@ -15,27 +15,188 @@ function getDifficulty() {
     for (i = 0; i < inputs.length; i++) {
         let input = inputs[i];
 
-        if (input.type === "radio" && input.checked) {
+        if (input.type === "radio" && input.name === "difficulty" && input.checked) {
             return input.value;
         }
     }
 }
 
 
+const RED = Symbol("red")
+const BLACK = Symbol("black")
+
+
 class GameState {
-    constructor(n_players, board, table, game_out) {
-        this.m_players = n_players;
-        this.board = board;
-        this.table = table;
-        this.game_out = game_out;
+    #n_players;
+    #board;
+    #table = null;
+    #game_out;
+    #n_turn = 2;
+    #game_over = false;
+
+    constructor(n_players, board, game_out) {
+        this.#n_players = n_players;
+        this.#board = board;
+        this.#game_out = game_out;
     }
 
-    get board() {
-        return this.board();
+    setTable(table) {
+        this.#table = table;
     }
 
-    
+    get gameOver() {
+        return this.#game_over;
+    }
 
+    get boardLen() {
+        return this.#board.length;
+    }
+
+    get boardCols() {
+        return this.#board[0].length;
+    }
+
+    get nPlayers() {
+        return this.#n_players;
+    }
+
+    #updateTable() {
+        for (let i = 0; i < this.#board.length; i++) {
+            let row = this.#table.rows[i];
+            for (let j = 0; j < this.#board[i].length; j++) {
+                row.cells[j].firstChild.replaceWith(this.placeBoardImage(i, j));
+            }
+        }
+    }
+
+    #setGameOut(message) {
+        this.#game_out.innerHTML = message;
+    }
+
+    #clearGameOut() {
+        this.#game_out.innerHTML = "";
+    }
+
+    placeBoardImage( row, col) {
+        let img = document.createElement("img");
+        img.height = "100";
+        img.width = "100";
+        if (this.#board[row][col] === 2) {
+            img.src = "static/conn4_black.gif";
+        } else if (this.#board[row][col] === 1) {
+            img.src = "static/conn4_star.gif";
+        } else {
+            img.src = "static/1x1.png";
+        }
+        return img
+    }
+
+    #checkGameWon() {
+        // check for horizontal wins
+
+        for (let i = 0; i < this.#board.length; i++) {
+            let row = this.#board[i];
+            let count = 0;
+            let cur_color = null;
+            let j = 0;
+
+            while (count < 4 && j < row.length) {
+                if (row[j] != 0 && cur_color === null) {
+                    cur_color = row[j]
+                    count++;
+                } else if (cur_color != null && row[j] === cur_color) {
+                    count++;
+                } else if (cur_color != null && row[j] != cur_color && row[j] != 0) {
+                    cur_color = row[j];
+                    count = 1;
+                } else if (cur_color != null && row[j] != cur_color && row[j] === 0) {
+                    cur_color = null;
+                    count = 0;
+                }
+                j++;
+            }
+
+            if (count === 4 && cur_color === 1) {
+                return RED;
+            } else if (count === 4 && cur_color === 2) {
+                return BLACK;
+            }
+        }
+
+        // check for verticle wins
+
+        for (let j = 0; j < this.#board[0].length; j++) {
+            let count = 0;
+            let cur_color = null;
+            let i = 0;
+
+            while(count < 4 && i < this.#board.length) {
+                if (this.#board[i][j] != 0 && cur_color === null) {
+                    cur_color = this.#board[i][j];
+                    count++;
+                } else if (this.#board[i][j] != 0 && this.#board[i][j] != cur_color && cur_color != null) {
+                    cur_color = this.#board[i][j];
+                    count = 1;
+                } else if (this.#board[i][j] === cur_color && cur_color != null) {
+                    count++;
+                } else if (cur_color != null && this.#board[i][j] === 0) {
+                    cur_color = null;
+                    count = 0;
+                }
+                i++;
+            }
+
+            if (count === 4 && cur_color === 1) {
+                return RED;
+            } else if (count === 4 && cur_color === 2) {
+                return BLACK;
+            }
+            
+        }
+        return null;
+
+        // check for diagional
+    }
+
+    setBoardCell(row, col) {
+        let player = 0;
+        this.#clearGameOut();
+
+        if (this.n_players === 1) {
+            player = 1;
+        } else {
+            player = (this.#n_turn % 2) + 1;
+        }
+
+        this.#board[row][col] = player;
+        this.#updateTable();
+        let game_status = this.#checkGameWon();
+
+        if (game_status === null) {
+            this.#n_turn++;
+            return;
+        } else {
+            console.log(game_status.toString() + "won the game.");
+            this.#game_over = true;
+            this.finishGame(game_status);
+
+        }
+    }
+
+    lowestEmptyRow(col) {
+        for (let i = this.boardLen - 1; i >= 0 ; i--) {
+            if (this.#board[i][col] === 0) {
+                return i;
+            }
+        }
+
+        return null;
+    }
+
+    finishGame(winner) {
+        this.#setGameOut(winner.toString() + " Wins!\nPress 'Start' button to play again.");
+    }
+     
 }
 
 
@@ -49,180 +210,69 @@ function generateBoard(rows, cols) {
 }
 
 
-function placeBoardImage(board, row, col) {
-    let img = document.createElement("img");
-    img.height = "100";
-    img.width = "100";
-    if (board[row][col] === 2) {
-        img.src = "static/conn4_black.gif";
-    } else if (board[row][col] === 1) {
-        img.src = "static/conn4_star.gif";
-    } else {
-        img.src = "static/1x1.png";
-    }
-    return img;
-}
-
-
-function buildTable(table, board) {
-    for (let i = 0; i < board.length; i++) {
+function buildTable(table, game) {
+    for (let i = 0; i < game.boardLen; i++) {
         let row = table.insertRow();
-        for (let j = 0; j < board[i].length; j++) {
+        for (let j = 0; j < game.boardCols; j++) {
             let cell = row.insertCell();
-            cell.appendChild(placeBoardImage(board, i, j));
+            cell.appendChild(game.placeBoardImage(i, j));
 
-            cell.addEventListener("click", () => onClickColumn(j, board, table));
+            cell.addEventListener("click", () => onClickColumn(game, j));
         }
     }
 }
 
 
-function updateTable(table, board) {
-    for (let i = 0; i < board.length; i++) {
-        let row = table.rows[i];
-        for (let j = 0; j < board[i].length; j++) {
-            row.cells[j].firstChild.replaceWith(placeBoardImage(board, i, j));
-        }
+function onClickColumn(game, col) {
+    if (game.gameOver) {
+        return null;
     }
-}
-
-
-function lowestEmptyRow(board, col) {
-    for (let i = board.length - 1; i >= 0 ; i--) {
-        if (board[i][col] === 0) {
-            return i;
-        }
-    }
-
-    return null;
-}
-
-
-function onClickColumn(col, board, table) {
     console.log("clicked col", col);
 
-    row = lowestEmptyRow(board, col);
+    row = game.lowestEmptyRow(col);
 
     if (row != null) {
-        board[row][col] = player;
-        placeBoardImage(board, row, col);
-        updateTable(table, board);
-        game_status = gameWon(board);
-        if (game_status != null) {
-            console.log(game_status);
-        }
-
-        if (game_status === RED) {
-            game_out.innerHTML = "You won!";
-        } else if (game_status === BLACK) {
-            game.innerHTML = "You Lose!";
-        }
+        game.setBoardCell(row, col)
     }
 }
 
+function setupGame(board_rows, board_cols) {
 
-const RED = Symbol("red")
-const BLACK = Symbol("black")
+    const game_out = document.getElementById("game_out");
+
+    const n_players = getPlayers();
+
+    const board = generateBoard(board_rows, board_cols);
 
 
-function gameWon(board) {
-    // check for horizontal wins
+    game = new GameState(n_players, board, game_out);
+    
+    console.log("building table");
 
-    for (let i = 0; i < board.length; i++) {
-        let row = board[i];
-        let count = 0;
-        let cur_color = null;
-        let j = 0;
-
-        while (count < 4 && j < row.length) {
-            if (row[j] != 0 && cur_color === null) {
-                cur_color = row[j]
-                count++;
-            } else if (cur_color != null && row[j] === cur_color) {
-                count++;
-            } else if (cur_color != null && row[j] != cur_color && row[j] != 0) {
-                cur_color = row[j];
-                count = 1;
-            } else if (cur_color != null && row[j] != cur_color && row[j] === 0) {
-                cur_color = null;
-                count = 0;
-            }
-            j++;
-        }
-
-        if (count === 4 && cur_color === 1) {
-            return RED;
-        } else if (count === 4 && cur_color === 2) {
-            return BLACK;
-        }
-    }
-
-    // check for verticle wins
-
-    for (j = 0; j < board[0].length; j++) {
-        count = 0;
-        cur_color = null;
-        i = 0;
-
-        while(count < 4 && i < board.length) {
-            if (board[i][j] != 0 && cur_color === null) {
-                cur_color = board[i][j];
-                count++;
-            } else if (board[i][j] != 0 && board[i][j] != cur_color && cur_color != null) {
-                cur_color = board[i][j];
-                count = 1;
-            } else if (board[i][j] === cur_color && cur_color != null) {
-                count++;
-            } else if (cur_color != null && board[i][j] === 0) {
-                cur_color = null;
-                count = 0;
-            }
-            i++;
-        }
-
-        if (count === 4 && cur_color === 1) {
-            return RED;
-        } else if (count === 4 && cur_color === 2) {
-            return BLACK;
-        }
-        
-    }
-    return null;
-
-    // check for diagional
+    const table = document.getElementById("conn4_board");
+    table.innerHTML = "";
+    buildTable(table, game);
+    game.setTable(table);
+    
+    return game;
 }
 
 
 function startGame() {
+    console.log("starting game");
+    game = setupGame(6, 7);
 
-    var game_out = document.getElementById("game_out");
-    var game_status = null;
-
-    const board = generateBoard(6, 7);
-    const table = document.getElementById("conn4_board");
-
-    buildTable(table, board);
-
-    const n_players = getPlayers();
-    var player = 1;
-
-    if (n_players === 1) {
+    if (game.nPlayers === 1) {
         const difficulty = getDifficulty();
 
         game_out.innerHTML = difficulty.toString();
         
         console.log("difficulty" + difficulty.toString());
-    } else if (n_players === 2) {
-        multiPlayer(board, table);   
+    } else if (game.nPlayers === 2) {
+        console.log("2 player game");
     }
 
-
-
 }
 
 
-function multiPlayer(board, table) {
-    game_out.innerHTML = "Player1: Make your move.";
 
-
-}

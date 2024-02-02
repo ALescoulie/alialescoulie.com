@@ -153,9 +153,110 @@ class GameState {
             }
             
         }
-        return null;
 
         // check for diagional
+        // get all valid possible sets of diagionals first
+
+        function getDiagionals(board) {
+            let diagionals = Array();
+            
+            // top row to bottom left diagionals
+            
+            let top_row = board[0];
+
+            for (let k = 0; k < top_row.length; k++) {
+                let cur_diag = Array();
+                let i = 0;
+                let j = k;
+                while (board.length > i && board[0].length > j) {
+                    cur_diag.push(board[i][j]);
+                    i++;
+                    j++;
+                }
+
+                diagionals.push(cur_diag);
+            }
+
+            // first col down diagionals
+            
+            for (let k = 1; k < board[0].length; k++) {
+                let cur_diag = Array();
+                let i = k;
+                let j = 0;
+                while (board.length > i && board[0].length > j) {
+                    cur_diag.push(board[i][j]);
+                    i++;
+                    j++;
+                }
+
+                diagionals.push(cur_diag);
+            }
+            
+            // bottom row up diagionals
+
+            for (let k = 0; k < board[0].length; k++) {
+                let cur_diag = Array();
+                let i = board.length - 1;
+                let j = k;
+                while (i >= 0 && board[0].length > j) {
+                    cur_diag.push(board[i][j]);
+                    i--;
+                    j++;
+                }
+
+                diagionals.push(cur_diag);
+            }
+
+            // last col up diagionals
+            
+            for (let k = board[0].length - 1; k >= 0; k--) {
+                let cur_diag = Array();
+                let i = k;
+                let j = board[0].length - 1;
+                while (board.length > i && j >= 0) {
+                    cur_diag.push(board[i][j]);
+                    i++;
+                    j--;
+                }
+
+                cur_diag.push(cur_diag);
+            }
+
+            return diagionals;
+        }
+
+        let diagionals = getDiagionals(this.#board);
+
+        for (let i = 0; i < diagionals.length; i++) {
+            let row = diagionals[i]
+            let count = 0;
+            let cur_color = null;
+            let j = 0;
+
+            while (count < 4 && j < row.length && row.length >= 4) {
+                if (row[j] != 0 && cur_color === null) {
+                    cur_color = row[j]
+                    count++;
+                } else if (cur_color != null && row[j] === cur_color) {
+                    count++;
+                } else if (cur_color != null && row[j] != cur_color && row[j] != 0) {
+                    cur_color = row[j];
+                    count = 1;
+                } else if (cur_color != null && row[j] != cur_color && row[j] === 0) {
+                    cur_color = null;
+                    count = 0;
+                }
+                j++;
+            }
+
+            if (count === 4 && cur_color === 1) {
+                return RED;
+            } else if (count === 4 && cur_color === 2) {
+                return BLACK;
+            }
+        }
+
+        return null;
     }
 
     setBoardCell(row, col) {

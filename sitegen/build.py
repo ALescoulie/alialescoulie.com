@@ -605,7 +605,7 @@ def build_project_page_html(project: ProjectData,
 
     proj_page_html: str = proj_page.render(
         header = header.render(
-            title=f"project.name - Alia Lescoulie",
+            title=f"{project.name} - Alia Lescoulie",
             depth="../../"
         ),
         navbar = navbar.render(depth="../../"),
@@ -630,10 +630,7 @@ def write_project(
     verbose: bool = False
     ) -> ProjectBuildData:
 
-    proj_dir: Path = site_build_dir.joinpath(
-        projects_build_dir,
-        project.data.directory
-    )
+    proj_dir: Path = projects_build_dir / project.data.directory
 
     proj_path = proj_dir.joinpath(project.data.path.stem + ".html")
 
@@ -659,11 +656,7 @@ def copy_project_files(
     if project.data.static is None:
         return None
     else:
-        new_static_dir: Path = site_build_dir.joinpath(
-            projects_build_dir,
-            project.data.directory,
-            "static"
-        )
+        new_static_dir: Path = projects_build_dir / project.data.directory / "static"
 
         if not new_static_dir.exists():
             new_static_dir.mkdir()
@@ -706,14 +699,8 @@ def build_projects_page(
         proj_blocks.append(
             proj_block_template.render(
                 title=project.data.name,
-                img_link=projects_build_dir.joinpath(
-                    project.data.directory,
-                    project.data.thumbnail
-                ),
-                link=projects_build_dir.joinpath(
-                    project.data.directory,
-                    project.data.path.stem + ".html"
-                ),
+                img_link=Path("projects") / project.data.directory / project.data.thumbnail,
+                link=Path("projects") / project.data.directory / (project.data.path.stem + ".html"),
                 data=render_date_string(project.data.date),
                 summary=project.data.description
             )

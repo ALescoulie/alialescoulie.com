@@ -54,6 +54,6 @@ def build_production():
     build.copy_static()
     build.build_pages()
     blog_posts: List[build.PostBuildData] = build.build_blog(verbose=True)
-    build.build_projects(blog_posts)
+    build.build_projects(blog_posts, verbose=True)
     build.build_games()
 

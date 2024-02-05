@@ -352,10 +352,10 @@ def build_post_blocks(posts: List[PostBuildData],
         post_blocks.append(
             block.render(
                 title=post.data.title,
-                img_link=Path("posts").joinpath(
+                img_link=Path(f"{link_depth * '../'}posts").joinpath(
                     post.data.directory,
                     post.data.thumbnail),
-                link=Path("posts").joinpath(
+                link=Path(f"{link_depth * '../'}posts").joinpath(
                     post.data.directory,
                     post.data.path.stem + ".html"),
                 date=render_date_string(post.data.date),

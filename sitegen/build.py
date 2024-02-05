@@ -21,7 +21,7 @@ SITEGEN_DIR: Final[Path] = Path(__file__).parent
 BUILD_DIR: Final[Path] = Path("site_out")
 SRC_DIR: Final[Path] = SITEGEN_DIR / "site_src"
 STATIC_DIR: Final[Path] = SITEGEN_DIR / "site_src/static"
-POSTS_DIR: Final[Path] = Path("blog_posts")
+POSTS_DIR: Final[Path] = SITEGEN_DIR / "blog_posts"
 PROJS_DIR: Final[Path] = SITEGEN_DIR / "projects"
 TEMPLATE_DIR: Final[Path] = SITEGEN_DIR / "templates"
 POST_BUILD_DIR: Final[Path] = BUILD_DIR / "posts"
@@ -254,10 +254,7 @@ def build_post_page(
         post_html=Post.post_src
     )
 
-    post_dir: Path = site_build_dir.joinpath(
-            post_build_dir,
-            Post.post_data.directory
-    )
+    post_dir: Path = site_build_dir / "posts" / Post.post_data.directory
 
     post_path: Path = post_dir.joinpath(Post.post_data.path.stem + ".html")
 
@@ -280,8 +277,7 @@ def copy_post_files(post: PostBuildData,
     if post.data.static is None:
         return None
     else:
-        new_static_dir: Path = site_build_dir.joinpath(
-            post_build_dir,
+        new_static_dir: Path = post_build_dir.joinpath(
             post.data.directory,
             "static"
         ) 
@@ -356,12 +352,10 @@ def build_post_blocks(posts: List[PostBuildData],
         post_blocks.append(
             block.render(
                 title=post.data.title,
-                img_link=root_dir.joinpath(
-                    post_build_dir,
+                img_link=Path("posts").joinpath(
                     post.data.directory,
                     post.data.thumbnail),
-                link=root_dir.joinpath(
-                    post_build_dir,
+                link=Path("posts").joinpath(
                     post.data.directory,
                     post.data.path.stem + ".html"),
                 date=render_date_string(post.data.date),

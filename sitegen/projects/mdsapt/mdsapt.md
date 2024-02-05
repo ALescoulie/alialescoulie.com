@@ -1,6 +1,7 @@
-# MD-SAPT
 
 ## Python Based Toolkit for Running Quantum-Chemical Analysis on Molecular Dynamics Trajectories
+
+### [Project Source](https://github.com/calpolyccg/MDSAPT)
 
 During the summer of 2021 I did an internship at Arizona State University in [Oliver Beckstein's computational biophysics group](https://becksteinlab.physics.asu.edu/), during which learned about how to build software that solves scientific problems.
 

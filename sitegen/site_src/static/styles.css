@@ -60,6 +60,18 @@ h3 {
     font-family: "Times New Roman";
 }
 
+a:visited {
+    color: pink;
+}
+
+a:hover {
+    color: pink;
+}
+
+a:hover a:active a:focus {
+    color:pink;
+}
+
 .sidenav { /* side nav bar */
     height: 100%;
     width: 160px;

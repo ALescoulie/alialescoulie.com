@@ -2,14 +2,14 @@
     "file_path": "mdsapt.md",
     "post_dir": "mdsapt_intro",
     "format": "markdown",
-    "static_dir": null,
+    "static_dir": "static",
     "title": "Why I made MD-SAPT",
     "authors": ["Alia Lescoulie"],
     "day": 4,
     "month": 2,
     "year": 2024,
     "description": "MD-SAPT is a piece of software I made for analyzing protein interactions with quantum mechanics, This post goes into the science and inspiration for this project.",
-    "thumbnail": "poster_main_fig.png",
-    "project": "mdsapt",
+    "thumbnail": "static/Poster_main_fig.png",
+    "projects": "MD-SAPT",
     "tags": ["science"]
 }

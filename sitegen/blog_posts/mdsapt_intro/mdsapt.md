@@ -55,12 +55,14 @@ Bringing her on was an excellent decision since she could do continuous integrat
 In the future I'll write an post about the code works in more detail, for information on how to use MD-SAPT you can look at the [readthedocs page](https://mdsapt.readthedocs.io).
 
 ## Future Directions
+![An illustration of the MD-SAPT repair process on amino acids. When selected from a chain the residue has radical electrons which are replaced by hydrogen atoms](static/resid_fix_poster.png)
 
 Currently the biggest limitation of MD-SAPT is that it only supports MD simulations of proteins.
 MD is used for all kinds of molecules including other biomolecules like nucleic acids (DNA and RNA) and lipids, its also used to study polymers used in plastics and other manufactured materials.
-The reason for this limitation is simple, when pulling a monomer out of polymer chain, you are severing the bonds between it and its neighboring monomers, leaving atoms with an odd number of electrons.
+The reason for this limitation is simple, when pulling a monomer out of polymer chain, you are severing the bonds between it and its neighboring monomers, leaving atoms with an odd number of electrons (see above image).
 Not only does this inaccurately represent the electronic structure of that molecule, it often causes errors in SAPT calculations.
-MD-SAPT currently has code for replacing the missing bonds in amino acids, but I'd like to provide a way do the same process for amino acids.
+MD-SAPT currently has code for replacing the missing bonds in amino acids, but I'd like to provide a way do the same process for nucleic acids.
+MD-SAPT doesn't offer a repair function that generalizes the process since the bond length for the new atoms, and even which atoms to use is specific to the molecule being analyzed.
 Additionally I'd like to implement a system for users to write their own functions to repair bonds for their particular use cases, and specify which repair function to use on each molecule being analyzed.
 This would allow users to analyze MD simulation on any type of polymer using MD-SAPT, and only have to provide a few of their own function instead of replicating the whole workflow.
 

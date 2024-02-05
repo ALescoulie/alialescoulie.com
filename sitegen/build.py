@@ -353,8 +353,7 @@ def build_post_blocks(posts: List[PostBuildData],
             block.render(
                 title=post.data.title,
                 img_link=Path(f"{link_depth * '../'}posts").joinpath(
-                    post.data.directory,
-                    post.data.thumbnail),
+                    post.data.directory) / post.data.thumbnail,
                 link=Path(f"{link_depth * '../'}posts").joinpath(
                     post.data.directory,
                     post.data.path.stem + ".html"),

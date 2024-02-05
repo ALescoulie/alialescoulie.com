@@ -61,15 +61,11 @@ h3 {
 }
 
 a:visited {
-    color: pink;
-}
-
-a:hover {
-    color: pink;
+    color: hotpink;
 }
 
 a:hover a:active a:focus {
-    color:pink;
+    color:hotpink;
 }
 
 .sidenav { /* side nav bar */

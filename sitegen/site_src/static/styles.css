@@ -125,6 +125,21 @@ img {
     background-color: white;
 }
 
+.blog_text h1 {
+    text-align: center;
+    color: black;
+}
+
+.blog_text h2 {
+    text-align: center;
+    color: black;
+}
+
+.blog_text h3 {
+    text-align: center;
+    color: black;
+}
+
 .blog_post_item {
     display: flex;
     flex-direction: row;

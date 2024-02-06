@@ -25,6 +25,11 @@ function getDifficulty() {
 const RED = Symbol("red")
 const BLACK = Symbol("black")
 
+const sym2str = new Map();
+
+sym2str.set(RED, "Red");
+sym2str.set(BLACK, "Black");
+
 
 class GameState {
     #n_players;
@@ -295,7 +300,7 @@ class GameState {
     }
 
     finishGame(winner) {
-        this.#setGameOut(winner.toString() + " Wins!\nPress 'Start' button to play again.");
+        this.#setGameOut(sym2str.get(winner) + " Wins!\nPress 'Start' button to play again.");
     }
      
 }

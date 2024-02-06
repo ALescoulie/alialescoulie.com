@@ -364,6 +364,18 @@ function setupGame(board_rows, board_cols) {
 }
 
 
+class AIPlayer {
+    
+    #game_state;
+    #difficulty;
+
+    constructor(game, difficulty) {
+        this.#game_state = game;
+        this.#difficulty = difficulty;
+    }
+}
+
+
 function startGame() {
     console.log("starting game");
     game = setupGame(6, 7);

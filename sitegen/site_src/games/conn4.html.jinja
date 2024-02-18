@@ -12,7 +12,7 @@
     <div class=main>
         <h1><center>Connect Four</center></h1>
        
-
+        <center>
         <form id="conn4_inputs" onsubmit="event.preventDefault(); startGame();">
             <h2>Players</h2>
             <input type="radio" id="one" name="players" value=1>
@@ -32,10 +32,15 @@
             <div class="break"></div>
             <input type="submit" value="Start" class="start_game">
         </form>
+        </center>
+
+        <p>One player mode is still in progress</p>
+
+        <br>
 
         <table id="conn4_board"></table>
 
-        <p id="game_out"><p> 
+        <center><p id="game_out"><p><center>
     </div>
 </body>
 
